@@ -92,6 +92,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         mCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 dismiss();
             }
         });
@@ -143,7 +144,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
 
 
-        mFingerprintUiHelper = new FingerprintUiHelper(activity.getSystemService(FingerprintManager.class),
+        mFingerprintUiHelper = new FingerprintUiHelper(contextWeakReference.get().getSystemService(FingerprintManager.class),
                 (ImageView) v.findViewById(R.id.fingerprint_icon),
                 (TextView) v.findViewById(R.id.fingerprint_status), this);
 
@@ -199,7 +200,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         activity = (Activity) context;
 
         mInputMethodManager = context.getSystemService(InputMethodManager.class);
-        mSharedPreferences = activity.getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        mSharedPreferences = context.getSharedPreferences("dataa", Context.MODE_PRIVATE);
     }
 
     /**

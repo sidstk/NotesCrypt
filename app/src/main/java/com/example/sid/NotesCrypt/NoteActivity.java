@@ -7,10 +7,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.hardware.fingerprint.FingerprintManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.security.keystore.KeyProperties;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
@@ -27,8 +25,6 @@ import android.widget.Toast;
 
 import com.example.sid.NotesCrypt.database.DatabaseHelper;
 import com.example.sid.NotesCrypt.database.model.Note;
-import com.example.sid.NotesCrypt.fingerprint.FingerprintAuthenticationDialogFragment;
-import com.squareup.leakcanary.LeakCanary;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -292,15 +288,27 @@ public class NoteActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialogInterface, int i) {
 
                                 if(use_fingerprint){
-                                    AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                    //instance = NoteActivity.this;
-                                    ah.listener(mCipher,DEFAULT_KEY_NAME,DELETE, position);
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                            //instance = NoteActivity.this;
+                                            ah.listener(mCipher,DEFAULT_KEY_NAME,DELETE, position);
+                                        }
+                                    });
+
                                 }
 
                                 else{
-                                    AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                    //instance = NoteActivity.this;
-                                    ah.listener(DELETE, position);
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                            //instance = NoteActivity.this;
+                                            ah.listener(DELETE, position);
+                                        }
+                                    });
+
                                 }
 
                             }
@@ -338,15 +346,27 @@ public class NoteActivity extends AppCompatActivity {
                                         //new SaveData().execute("addNote",noteText.getText().toString(),noteTitle.getText().toString());
                                         //finish();
                                         if(use_fingerprint){
-                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            //instance = NoteActivity.this;
-                                            ah.listener(mCipher,DEFAULT_KEY_NAME,SAVE, position);
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                                    //instance = NoteActivity.this;
+                                                    ah.listener(mCipher,DEFAULT_KEY_NAME,SAVE, position);
+                                                }
+                                            });
+
                                         }
 
                                         else{
-                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            //instance = NoteActivity.this;
-                                            ah.listener(SAVE, position);
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                                    //instance = NoteActivity.this;
+                                                    ah.listener(SAVE, position);
+                                                }
+                                            });
+
                                         }
 
 
@@ -372,15 +392,27 @@ public class NoteActivity extends AppCompatActivity {
                                         //finish();
                                         //new SaveData().execute("updateNote",noteText.getText().toString(),noteTitle.getText().toString(),String.valueOf(position));
                                         if(use_fingerprint){
-                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            //instance = NoteActivity.this;
-                                            ah.listener(mCipher,DEFAULT_KEY_NAME,UPDATE, position);
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                                    //instance = NoteActivity.this;
+                                                    ah.listener(mCipher,DEFAULT_KEY_NAME,UPDATE, position);
+                                                }
+                                            });
+
                                         }
 
                                         else{
-                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            //instance = NoteActivity.this;
-                                            ah.listener(UPDATE, position);
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                                    //instance = NoteActivity.this;
+                                                    ah.listener(UPDATE, position);
+                                                }
+                                            });
+
                                         }
 
                                     }
