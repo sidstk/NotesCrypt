@@ -2,11 +2,16 @@ package com.example.sid.NotesCrypt.fingerprint;
 
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.DialogFragment;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.KeyProtection;
 import android.support.annotation.NonNull;
@@ -14,6 +19,8 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,7 +77,7 @@ public class ChangePasswordFragment extends DialogFragment {
     private static final String PBE_ALGORITHM = "PBKDF2WithHmacSHA1";
     private static final String AES_KEY = "secret_key";
     private Activity mActivity;
-    static List<Note> notes = new ArrayList<>();
+    private static List<Note> notes = new ArrayList<>();
 
     public ChangePasswordFragment() {
         // Required empty public constructor
@@ -147,8 +154,8 @@ public class ChangePasswordFragment extends DialogFragment {
                         mSecondDialogButton.setEnabled(false);
                         NoteListActivity.notesList.clear();
                         notes.addAll(NoteListActivity.db.getAllNotes());
-                        NoteListActivity.db = null;                  // before deleting database unreferenced all database connections
-                        context.deleteDatabase("notes_db");
+                        NoteListActivity.db.close();                  // before deleting database unreferenced all database connections
+                        context.getApplicationContext().deleteDatabase("notes_db");
                         new Engine(new WeakReference<Context>(context), new WeakReference<ChangePasswordFragment>(this)).execute(rePassword.getText().toString());
                         //generateKey(rePassword.getText().toString());
                         //dismiss();
@@ -194,9 +201,11 @@ public class ChangePasswordFragment extends DialogFragment {
         private SecretKey secret;
         private  final String AES_KEY = "secret_key";
         private  final String AES_KEY_TEMP = "secret_key_temp";
+
         private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
         private WeakReference<Context> contextWeakReference;
         private WeakReference<ChangePasswordFragment> changePasswordFragmentWeakReference;
+        private String pass;
 
         Engine(WeakReference<Context> contextWeakReference,
                WeakReference<ChangePasswordFragment> changePasswordFragmentWeakReference){
@@ -211,6 +220,7 @@ public class ChangePasswordFragment extends DialogFragment {
 
 
         }
+
         private void generateKey(final String pass) throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, InvalidKeySpecException, InvalidAlgorithmParameterException, UnrecoverableKeyException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, InvalidParameterSpecException, DestroyFailedException {
 
 
@@ -227,9 +237,9 @@ public class ChangePasswordFragment extends DialogFragment {
 
             keySpec.clearPassword();
 
-            secret = new SecretKeySpec(secretKey.getEncoded(), "AES");
+            secret = secretKey;
 
-
+            SecretKey key = new SecretKeySpec(secretKey.getEncoded(), "AES");
             final SharedPreferences shp = contextWeakReference.get().getSharedPreferences("dataa", Context.MODE_PRIVATE);
             Cipher ecipher = Cipher.getInstance(RSA_ALGORITHM);
             ecipher.init(Cipher.ENCRYPT_MODE,extractkey(contextWeakReference.get()));
@@ -244,26 +254,35 @@ public class ChangePasswordFragment extends DialogFragment {
 
             keyStore.setEntry(
                     AES_KEY_TEMP,
-                    new KeyStore.SecretKeyEntry(secret),
+                    new KeyStore.SecretKeyEntry(key),
                     new KeyProtection.Builder(KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                            .setRandomizedEncryptionRequired(true)
+                            .setRandomizedEncryptionRequired(false)
                             .build());
 
             ChangeEncryptedData();
         }
 
         private void ChangeEncryptedData() throws IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, BadPaddingException, KeyStoreException, InvalidKeySpecException, IllegalBlockSizeException, InvalidParameterSpecException, DestroyFailedException {
-            DatabaseHelper db = new DatabaseHelper(contextWeakReference.get());
+            DatabaseHelper db = new DatabaseHelper(contextWeakReference.get().getApplicationContext());
 
+
+            for(int i=0; i<notes.size(); i++){
+                Log.i("Enote", notes.get(i).getNote());
+                Log.i("Etitle", notes.get(i).getTitle());
+            }
 
             for(int i=0; i<notes.size(); i++){
 
                 long id = db.insertNote(CipherEngine.encryptWithKey(AES_KEY_TEMP, CipherEngine.decrypt(notes.get(i).getNote())),
-                        CipherEngine.encryptWithKey(AES_KEY_TEMP, CipherEngine.decrypt(notes.get(i).getTitle())),notes.get(i).getTimestamp());
+                        CipherEngine.encryptWithKey(AES_KEY_TEMP, CipherEngine.decrypt(notes.get(i).getTitle())),
+                        notes.get(i).getTimestamp());
                 NoteListActivity.notesList.add(db.getNote(id));
+
             }
+
+            RevertKeys();
 
             ((Activity) contextWeakReference.get()).runOnUiThread(new Runnable() {
                 @Override
@@ -272,30 +291,35 @@ public class ChangePasswordFragment extends DialogFragment {
                 }
             });
 
-
+            notes.clear();
+            db.close();
             db = null;
-            RevertKeys();
         }
 
-        private void RevertKeys() throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, DestroyFailedException {
+
+        private void RevertKeys() throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, DestroyFailedException, InvalidKeySpecException, NoSuchPaddingException, UnrecoverableKeyException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException {
 
 
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
 
+
             if(keyStore.containsAlias(AES_KEY_TEMP))
                 keyStore.deleteEntry(AES_KEY_TEMP);
+
 
             if(keyStore.containsAlias(AES_KEY))
                 keyStore.deleteEntry(AES_KEY);
 
+            SecretKey key = new SecretKeySpec(secret.getEncoded(), "AES");
+
             keyStore.setEntry(
                     AES_KEY,
-                    new KeyStore.SecretKeyEntry(secret),
+                    new KeyStore.SecretKeyEntry(key),
                     new KeyProtection.Builder(KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                            .setRandomizedEncryptionRequired(true)
+                            .setRandomizedEncryptionRequired(false)
                             .build());
 
         }
@@ -304,27 +328,27 @@ public class ChangePasswordFragment extends DialogFragment {
         protected Void doInBackground(String... strings) {
             try {
                 generateKey(strings[0]);
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (KeyStoreException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (CertificateException e) {
                 e.printStackTrace();
-            } catch (InvalidKeySpecException e) {
-                e.printStackTrace();
-            } catch (InvalidAlgorithmParameterException e) {
+            } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             } catch (UnrecoverableKeyException e) {
+                e.printStackTrace();
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
+            } catch (InvalidAlgorithmParameterException e) {
                 e.printStackTrace();
             } catch (NoSuchPaddingException e) {
                 e.printStackTrace();
             } catch (BadPaddingException e) {
                 e.printStackTrace();
-            } catch (IllegalBlockSizeException e) {
+            } catch (KeyStoreException e) {
                 e.printStackTrace();
-            } catch (InvalidKeyException e) {
+            } catch (InvalidKeySpecException e) {
+                e.printStackTrace();
+            } catch (IllegalBlockSizeException e) {
                 e.printStackTrace();
             } catch (InvalidParameterSpecException e) {
                 e.printStackTrace();
@@ -345,8 +369,15 @@ public class ChangePasswordFragment extends DialogFragment {
         protected void onPostExecute(Void aVoid) {
 
             changePasswordFragmentWeakReference.get().pg.setVisibility(View.GONE);
+            //NoteListActivity.db = new DatabaseHelper(contextWeakReference.get().getApplicationContext());
             changePasswordFragmentWeakReference.get().dismiss();
             super.onPostExecute(aVoid);
         }
+
+
     }
+
 }
+
+
+

@@ -64,7 +64,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
     private FingerprintManager.CryptoObject mCryptoObject;
     private FingerprintUiHelper mFingerprintUiHelper;
-    private Activity activity;
+    private WeakReference<Activity> activity;
     private WeakReference<Context> contextWeakReference;
 
     private InputMethodManager mInputMethodManager;
@@ -144,7 +144,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
 
 
-        mFingerprintUiHelper = new FingerprintUiHelper(contextWeakReference.get().getSystemService(FingerprintManager.class),
+        mFingerprintUiHelper = new FingerprintUiHelper(activity.get().getSystemService(FingerprintManager.class),
                 (ImageView) v.findViewById(R.id.fingerprint_icon),
                 (TextView) v.findViewById(R.id.fingerprint_status), this);
 
@@ -180,14 +180,12 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         listPosition = position;
     }
 
-    public void setWeakReference(WeakReference<Context> contextWeakReference){
-        this.contextWeakReference = contextWeakReference;
-    }
 
 
     @Override
     public void onPause() {
         super.onPause();
+        Log.i("info","onpause");
         mFingerprintUiHelper.stopListening();
     }
 
@@ -195,12 +193,10 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     public void onAttach(Context context) {
         super.onAttach(context);
 
-
-
-        activity = (Activity) context;
-
+        activity = new WeakReference<>(getActivity());
+        contextWeakReference = new WeakReference<>(context);
         mInputMethodManager = context.getSystemService(InputMethodManager.class);
-        mSharedPreferences = context.getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        mSharedPreferences = context.getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
     }
 
     /**
@@ -244,7 +240,6 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
             if (mStage == Stage.NEW_FINGERPRINT_ENROLLED) {
                 SharedPreferences.Editor editor = mSharedPreferences.edit();
-                //editor.putBoolean(getString(R.string.use_fingerprint_to_authenticate_key), mUseFingerprintFutureCheckBox.isChecked());
                 editor.putBoolean("use_fingerprint_future", mUseFingerprintFutureCheckBox.isChecked());
 
                 editor.apply();
@@ -339,16 +334,10 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     public void onAuthenticated() {
         // Callback from FingerprintUiHelper. Let the activity know that authentication was
         // successful.
-        //noteListActivity.onPurchased(true /* withFingerprint */, mCryptoObject);
 
-        /*if(mCause == "edit")
-        noteListActivity.startNoteActivity(noteListActivity.notesList.get(listPosition).getId(),listPosition);
-
-        else if(mCause == "delete")
-        noteListActivity.deleteNote(listPosition);
-            dismiss();*/
         authenticated = true;
         Context context = contextWeakReference.get();
+
 
         if(context instanceof NoteListActivity){
 
@@ -363,6 +352,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
         else if(context instanceof NoteActivity){
             NoteActivity noteActivity = (NoteActivity) context;
+
             if(mCause == "save"){
                 Log.i("info","save");
                 noteActivity.save();
@@ -387,52 +377,6 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
                 mSharedPreferences.edit().putBoolean(getString(R.string.use_fingerprint_future), false).apply();
             }
         }
-
-
-        /*if(activity.getLocalClassName().equals("SettingsActivity")){
-
-           if(mCause == "fp_true"){
-               Log.i("info","fp_true");
-               mSharedPreferences.edit().putBoolean(getString(R.string.use_fingerprint_future), true).apply();
-               AuthenticationHelper authenticationHelper = new AuthenticationHelper(activity);
-               authenticationHelper.createKey(DEFAULT_KEY_NAME, true, true);
-           }
-
-           else if(mCause == "fp_false"){
-               Log.i("info","fp_false");
-               mSharedPreferences.edit().putBoolean(getString(R.string.use_fingerprint_future), false).apply();
-           }
-        }
-
-        if(NoteListActivity.instance != null){
-            Log.i("info","notelist instance not null");
-
-            NoteListActivity noteList = (NoteListActivity) NoteListActivity.instance;
-
-            if(mCause == "edit")
-                noteList.startNoteActivity(noteListActivity.notesList.get(listPosition).getId(),listPosition);
-
-            else if(mCause == "delete")
-                noteList.deleteNote(listPosition);
-            NoteListActivity.instance = null;
-        }
-
-
-        if(NoteActivity.instance!=null) {
-
-            NoteActivity noteActivity = NoteActivity.instance;
-            if(mCause == "save"){
-            Log.i("info","save");
-                    noteActivity.save();
-            }
-            else if(mCause == "delete"){
-                noteActivity.delete();
-            }
-            else if(mCause == "update"){
-                noteActivity.update();
-            }
-            NoteActivity.instance = null;
-        }*/
 
         dismiss();
 

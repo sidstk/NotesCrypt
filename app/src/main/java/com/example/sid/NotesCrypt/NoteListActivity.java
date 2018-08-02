@@ -114,7 +114,7 @@ public class NoteListActivity extends AppCompatActivity {
 
 
 
-        db = new DatabaseHelper(this);
+        db = new DatabaseHelper(getApplicationContext());
 
         notesList.addAll(db.getAllNotes());
         //mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -298,13 +298,11 @@ public class NoteListActivity extends AppCompatActivity {
 
                     if(use_fingerprint){
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        //instance = NoteListActivity.this;
                         ah.listener(mCipher,DEFAULT_KEY_NAME,EDIT, position);
                     }
 
                     else{
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        //instance = NoteListActivity.this;
                         ah.listener(EDIT, position);      // only password based authentication
                     }
 
@@ -314,12 +312,10 @@ public class NoteListActivity extends AppCompatActivity {
 
                     if(use_fingerprint) {
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        //instance = NoteListActivity.this;
                         ah.listener(mCipher, DEFAULT_KEY_NAME, DELETE, position);
                     }
                     else{
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        //instance = NoteListActivity.this;
                         ah.listener(DELETE, position);
                     }
                     //deleteNote(position);
@@ -348,7 +344,6 @@ public class NoteListActivity extends AppCompatActivity {
     /**
      * Toggling list and empty notes view
      */
-
     public static void toggleEmptyNotes() {
         // you can check notesList.size() > 0
 
@@ -362,7 +357,7 @@ public class NoteListActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        db = new DatabaseHelper(this);
+        //db = new DatabaseHelper(this);
         super.onResume();
     }
 

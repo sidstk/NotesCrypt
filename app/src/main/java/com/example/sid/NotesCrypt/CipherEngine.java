@@ -69,11 +69,6 @@ public class CipherEngine {
 
         final byte[] iv = Base64.decode(text.substring(0,16),Base64.NO_WRAP);
 
-
-        //final Key unwrapsecretkey = unwrapKey();
-
-
-        //dcipher.init(Cipher.DECRYPT_MODE, unwrapsecretkey, new IvParameterSpec(iv));
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
         final SecretKey keyStoreKey = (SecretKey) keyStore.getKey(AES_KEY, null);
@@ -81,7 +76,6 @@ public class CipherEngine {
 
         dcipher.init(Cipher.DECRYPT_MODE, keyStoreKey, new GCMParameterSpec(128,iv));
 
-        //dcipher.init(Cipher.DECRYPT_MODE, keyStoreKey);
         return new String(dcipher.doFinal(Base64.decode(text.substring(16), Base64.NO_WRAP)),"UTF-8");
     }
 
@@ -96,19 +90,22 @@ public class CipherEngine {
 
         //ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey,new IvParameterSpec(IV));
 
+        byte[] iv = new byte[12];
+        final SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(iv);
+        final GCMParameterSpec gcm = new GCMParameterSpec(128, iv);
 
-        ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey, new SecureRandom());
-        //final byte[] IV = ecipher.getIV();
-        final byte[] IV = ecipher.getParameters().getParameterSpec(GCMParameterSpec.class).getIV();  // AES/GCM/NoPadding requires only 12 byte long IVs
+        ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey, gcm);
+        //final byte[] IV = ecipher.getParameters().getParameterSpec(GCMParameterSpec.class).getIV();  // AES/GCM/NoPadding requires only 12 byte long IVs
 
-        Log.i("info",Base64.encodeToString(IV,Base64.NO_WRAP));
-        return  Base64.encodeToString(IV,
+        Log.i("info",Base64.encodeToString(iv,Base64.NO_WRAP));
+        return  Base64.encodeToString(iv,
                 Base64.NO_WRAP)+Base64.encodeToString(ecipher.doFinal(text.getBytes("UTF-8")),
                 Base64.NO_WRAP);
 
     }
 
-    public static String encryptWithKey(final String alias,final String text) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException, CertificateException, UnrecoverableKeyException, KeyStoreException, InvalidParameterSpecException {
+    public static String encryptWithKey(final String alias, final String text) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException, CertificateException, UnrecoverableKeyException, KeyStoreException, InvalidParameterSpecException {
 
         final Cipher ecipher = Cipher.getInstance(AES_ALGORITHM);
 
@@ -119,33 +116,37 @@ public class CipherEngine {
 
         //ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey,new IvParameterSpec(IV));
 
+        byte[] iv = new byte[12];
+        final SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(iv);
+        final GCMParameterSpec gcm = new GCMParameterSpec(128, iv);
 
-        ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey, new SecureRandom());
-        //final byte[] IV = ecipher.getIV();
-        final byte[] IV = ecipher.getParameters().getParameterSpec(GCMParameterSpec.class).getIV();  // AES/GCM/NoPadding requires only 12 byte long IVs
+        ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey, gcm);
+        //final byte[] IV = ecipher.getParameters().getParameterSpec(GCMParameterSpec.class).getIV();  // AES/GCM/NoPadding requires only 12 byte long IVs
 
-        Log.i("info",Base64.encodeToString(IV,Base64.NO_WRAP));
-        return  Base64.encodeToString(IV,
+        Log.i("info",Base64.encodeToString(iv,Base64.NO_WRAP));
+        return  Base64.encodeToString(iv,
                 Base64.NO_WRAP)+Base64.encodeToString(ecipher.doFinal(text.getBytes("UTF-8")),
                 Base64.NO_WRAP);
 
     }
 
-    public static boolean check_password(String pass, WeakReference<Context> contextWeakReference) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, UnrecoverableKeyException, CertificateException, KeyStoreException, IOException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+    public static boolean check_password(final String pass, WeakReference<Context> contextWeakReference) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, UnrecoverableKeyException, CertificateException, KeyStoreException, IOException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
 
         final int iterationCount = 4000;
 
         final Context context = contextWeakReference.get();
-        final SharedPreferences shp = context.getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        final SharedPreferences shp = context.getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
 
         final Cipher dcipher = Cipher.getInstance(RSA_ALGORITHM);
         dcipher.init(Cipher.DECRYPT_MODE,getPrivKey(contextWeakReference.get()));
 
-        //Log.i("info",shp.getString("salt",""));
         final byte[] salt = dcipher.doFinal(Base64.decode(shp.getString("salt",""),Base64.NO_WRAP));
 
         final SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGORITHM);
+
         final PBEKeySpec keySpec = new PBEKeySpec(pass.toCharArray(), salt, iterationCount, 256);
+
         final SecretKey secretKey = factory.generateSecret(keySpec);
 
         keySpec.clearPassword();
@@ -154,6 +155,7 @@ public class CipherEngine {
 
         final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
+
         final SecretKey keyStoreKey = (SecretKey) keyStore.getKey(AES_KEY, null);
 
         final Cipher c1 = Cipher.getInstance(AES_ALGORITHM);

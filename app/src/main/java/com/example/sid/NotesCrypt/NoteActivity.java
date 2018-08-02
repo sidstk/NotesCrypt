@@ -80,7 +80,7 @@ public class NoteActivity extends AppCompatActivity {
 
         SaveData(WeakReference<Context> contextWeakReference){
             this.contextWeakReference = contextWeakReference;
-            db = new DatabaseHelper(this.contextWeakReference.get());
+            db = new DatabaseHelper(this.contextWeakReference.get().getApplicationContext());
 
         }
 
@@ -210,6 +210,7 @@ public class NoteActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+            db.close();
             progress.dismiss();
             ((Activity)contextWeakReference.get()).finish();
         }
@@ -292,7 +293,6 @@ public class NoteActivity extends AppCompatActivity {
                                         @Override
                                         public void run() {
                                             AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            //instance = NoteActivity.this;
                                             ah.listener(mCipher,DEFAULT_KEY_NAME,DELETE, position);
                                         }
                                     });
@@ -304,7 +304,6 @@ public class NoteActivity extends AppCompatActivity {
                                         @Override
                                         public void run() {
                                             AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            //instance = NoteActivity.this;
                                             ah.listener(DELETE, position);
                                         }
                                     });
@@ -350,7 +349,6 @@ public class NoteActivity extends AppCompatActivity {
                                                 @Override
                                                 public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    //instance = NoteActivity.this;
                                                     ah.listener(mCipher,DEFAULT_KEY_NAME,SAVE, position);
                                                 }
                                             });
@@ -362,7 +360,6 @@ public class NoteActivity extends AppCompatActivity {
                                                 @Override
                                                 public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    //instance = NoteActivity.this;
                                                     ah.listener(SAVE, position);
                                                 }
                                             });
@@ -396,7 +393,6 @@ public class NoteActivity extends AppCompatActivity {
                                                 @Override
                                                 public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    //instance = NoteActivity.this;
                                                     ah.listener(mCipher,DEFAULT_KEY_NAME,UPDATE, position);
                                                 }
                                             });
@@ -408,7 +404,6 @@ public class NoteActivity extends AppCompatActivity {
                                                 @Override
                                                 public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    //instance = NoteActivity.this;
                                                     ah.listener(UPDATE, position);
                                                 }
                                             });
@@ -606,6 +601,9 @@ public class NoteActivity extends AppCompatActivity {
             super.onBackPressed();
     }
 
-
-
+    @Override
+    protected void onDestroy() {
+        Log.i("info","noteacti ondestroy");
+        super.onDestroy();
+    }
 }

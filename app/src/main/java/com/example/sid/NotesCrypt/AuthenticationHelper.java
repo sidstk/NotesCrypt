@@ -137,8 +137,7 @@ public class AuthenticationHelper {
         String mCause;
         int listPosition;
         AppCompatActivity activity;
-        Context mContext;
-        private final String DIALOG_FRAGMENT_TAG = "myFragment";
+        private final String DIALOG_FRAGMENT_TAG = "authenticationFragment";
         private SharedPreferences mSharedPreferences;
 
 
@@ -147,9 +146,8 @@ public class AuthenticationHelper {
             mKeyName = keyName;
             mCause = cause;
             listPosition = position;
-            mContext = contextWeakReference.get();
-            activity = (AppCompatActivity) mContext;
-            mSharedPreferences = mContext.getSharedPreferences("dataa", Context.MODE_PRIVATE);
+            activity = (AppCompatActivity) contextWeakReference.get();
+            mSharedPreferences = contextWeakReference.get().getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
 
         }
 
@@ -164,15 +162,12 @@ public class AuthenticationHelper {
                 // Show the fingerprint dialog. The user has the option to use the fingerprint with
                 // crypto, or you can fall back to using a server-side verified password.
                 Log.i("info","key valid");
-                //instance = NoteListActivity.this;
                 FingerprintAuthenticationDialogFragment fragment
                         = new FingerprintAuthenticationDialogFragment();
                 fragment.setCause(mCause);
                 fragment.setListPosition(listPosition);
                 fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
-                fragment.setWeakReference(new WeakReference<>(mContext));
 
-                //boolean useFingerprintPreference = mSharedPreferences.getBoolean(mContext.getString(R.string.use_fingerprint_to_authenticate_key), true);
                 boolean useFingerprintPreference = mSharedPreferences.getBoolean("use_fingerprint_future", true);
 
                 if (useFingerprintPreference) {
@@ -196,7 +191,6 @@ public class AuthenticationHelper {
                         = new FingerprintAuthenticationDialogFragment();
                 fragment.setCause(mCause);
                 fragment.setListPosition(listPosition);
-                fragment.setWeakReference(new WeakReference<>(mContext));
                 fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
                 fragment.setStage(
                         FingerprintAuthenticationDialogFragment.Stage.NEW_FINGERPRINT_ENROLLED);
@@ -209,8 +203,6 @@ public class AuthenticationHelper {
                     = new FingerprintAuthenticationDialogFragment();
             fragment.setCause(mCause);
             fragment.setListPosition(listPosition);
-            fragment.setWeakReference(new WeakReference<>(mContext));
-            //fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
             fragment.setStage(
                     FingerprintAuthenticationDialogFragment.Stage.PASSWORD);
             fragment.show(activity.getFragmentManager(), DIALOG_FRAGMENT_TAG);

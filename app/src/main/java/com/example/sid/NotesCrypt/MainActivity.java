@@ -160,13 +160,14 @@ public class MainActivity extends AppCompatActivity{
 
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
+
             keyStore.setEntry(
                     AES_KEY,
                     new KeyStore.SecretKeyEntry(secret),
                     new KeyProtection.Builder(KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                            .setRandomizedEncryptionRequired(true)
+                            .setRandomizedEncryptionRequired(false)
                             .build());
         }
 
@@ -231,6 +232,7 @@ public class MainActivity extends AppCompatActivity{
             Intent it = new Intent(contextWeakReference.get(),NoteListActivity.class);
             it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             contextWeakReference.get().startActivity(it);
+
         }
     }
 
