@@ -45,7 +45,7 @@
     <string name="fingerprint">fingerprint</string>
     <string name="first_run">first_run</string>
     <string name="fingerprint_description">Confirm fingerprint to continue</string>
-    <string name="fingerprint_hint">Touch fingerprint sensor</string>
+    <string name="fingerprint_hint">Touch fingerprint sensor \n to verify your identity</string>
     <string name="password_description">Enter your password to continue</string>
 
     <string name="fingerprint_not_recognized">Fingerprint not recognized. Try again</string>

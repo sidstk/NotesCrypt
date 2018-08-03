@@ -116,7 +116,7 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
         @Override
         public void run() {
             mErrorTextView.setTextColor(
-                    mErrorTextView.getResources().getColor(R.color.hint_color, null));
+                    mErrorTextView.getResources().getColor(R.color.text_color_black, null));
             mErrorTextView.setText(
                     mErrorTextView.getResources().getString(R.string.fingerprint_hint));
             //mIcon.setImageResource(R.drawable.ic_fp_40px);

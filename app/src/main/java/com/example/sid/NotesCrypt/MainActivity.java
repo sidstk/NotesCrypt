@@ -40,6 +40,8 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -97,6 +99,7 @@ public class MainActivity extends AppCompatActivity{
     private TextInputLayout pwdInputLayout;
     private TextInputLayout repwdInputLayout;
     private CheckBox checkBox;
+
     private InputMethodManager inputMethodManager;
     private SharedPreferences shp;
     boolean a = true;
@@ -104,7 +107,6 @@ public class MainActivity extends AppCompatActivity{
     Handler h1;
     KeyguardManager keyguardManager;
     FingerprintManager fingerprintManager;
-
 
 
     public static class CreateKeys extends AsyncTask<String,Void,Void>{
@@ -553,6 +555,8 @@ public class MainActivity extends AppCompatActivity{
             setContentView(R.layout.activity_login);
             pwdInputLayout = findViewById(R.id.pwdInputLayout);
             pwd  = findViewById(R.id.pwd);
+
+
             /*pwd.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
                 public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
@@ -595,8 +599,9 @@ public class MainActivity extends AppCompatActivity{
             findViewById(R.id.fpToggle).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    BottomSheetFragment bottomSheetFragment = new BottomSheetFragment();
+                    final BottomSheetFragment bottomSheetFragment = new BottomSheetFragment();
                     bottomSheetFragment.show(getSupportFragmentManager(), bottomSheetFragment.getTag());
+
                 }
             });
 

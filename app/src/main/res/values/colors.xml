@@ -13,7 +13,7 @@
     <color name="warning_color">#f4511e</color>
     <color name="hint_color">#423d3a3a</color>
     <color name="success_color">#009688</color>
-    <color name="bottom_fingerprint_fragment_title">#050404</color>
+    <color name="text_color_black">#050404</color>
 
     <color name="error_registration">#e10913</color>
 </resources>
