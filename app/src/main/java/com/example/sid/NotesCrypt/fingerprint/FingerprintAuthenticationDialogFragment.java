@@ -23,10 +23,10 @@ import android.widget.TextView;
 
 import com.example.sid.NotesCrypt.AuthenticationHelper;
 import com.example.sid.NotesCrypt.CipherEngine;
-import com.example.sid.NotesCrypt.NoteActivity;
-import com.example.sid.NotesCrypt.NoteListActivity;
+import com.example.sid.NotesCrypt.activity.NoteActivity;
+import com.example.sid.NotesCrypt.activity.NoteListActivity;
 import com.example.sid.NotesCrypt.R;
-import com.example.sid.NotesCrypt.SettingsActivity;
+import com.example.sid.NotesCrypt.activity.SettingsActivity;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -42,7 +42,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-import static com.example.sid.NotesCrypt.MainActivity.DEFAULT_KEY_NAME;
+import static com.example.sid.NotesCrypt.activity.MainActivity.DEFAULT_KEY_NAME;
 
 /**
  * A dialog which uses fingerprint APIs to authenticate the user, and falls back to password

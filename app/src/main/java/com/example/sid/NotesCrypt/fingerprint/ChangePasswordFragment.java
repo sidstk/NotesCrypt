@@ -2,40 +2,26 @@ package com.example.sid.NotesCrypt.fingerprint;
 
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.DialogFragment;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.KeyProtection;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.example.sid.NotesCrypt.CipherEngine;
-import com.example.sid.NotesCrypt.MainActivity;
-import com.example.sid.NotesCrypt.NoteListActivity;
+import com.example.sid.NotesCrypt.activity.NoteListActivity;
 import com.example.sid.NotesCrypt.R;
-import com.example.sid.NotesCrypt.SettingsActivity;
 import com.example.sid.NotesCrypt.database.DatabaseHelper;
 import com.example.sid.NotesCrypt.database.model.Note;
 
