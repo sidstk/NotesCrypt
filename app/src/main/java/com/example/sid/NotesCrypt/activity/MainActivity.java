@@ -417,7 +417,6 @@ public class MainActivity extends AppCompatActivity{
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
         shp = getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
         inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        LeakCanary.install(getApplication());
 
         handlers();
 

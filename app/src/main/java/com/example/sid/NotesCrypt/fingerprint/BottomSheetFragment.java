@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.sid.NotesCrypt.activity.NoteListActivity;
@@ -54,6 +56,7 @@ public class BottomSheetFragment extends BottomSheetDialogFragment implements Fi
                 (TextView) v.findViewById(R.id.fingerprint_details), this);
         return v;
     }
+
 
     @Override
     public void onResume() {

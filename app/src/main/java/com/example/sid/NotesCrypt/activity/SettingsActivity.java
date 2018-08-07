@@ -80,4 +80,10 @@ public class SettingsActivity extends AppCompatActivity {
             default: return false;
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        finish();
+        super.onBackPressed();
+    }
 }

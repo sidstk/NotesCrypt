@@ -16,4 +16,5 @@
     <color name="text_color_black">#050404</color>
 
     <color name="error_registration">#e10913</color>
+    <color name="white">#ffffff</color>
 </resources>

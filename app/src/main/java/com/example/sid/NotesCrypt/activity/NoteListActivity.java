@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
 import android.security.keystore.KeyProperties;
@@ -13,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.util.AdapterListUpdateCallback;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -45,15 +47,13 @@ import javax.crypto.NoSuchPaddingException;
 
 
 public class NoteListActivity extends AppCompatActivity {
-    public static NotesAdapter mAdapter;
+    public  static NotesAdapter mAdapter;
     public static List<Note> notesList = new ArrayList<>();
     private CoordinatorLayout coordinatorLayout;
     private RecyclerView recyclerView;
-    public static TextView noNotesView;
+    private static TextView noNotesView;
 
-    public static DatabaseHelper db;
-
-
+    public  static DatabaseHelper db;
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -68,6 +68,13 @@ public class NoteListActivity extends AppCompatActivity {
     private Cipher mCipher;
 
 
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        notesList.clear();
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -240,7 +247,7 @@ public class NoteListActivity extends AppCompatActivity {
      * Deleting note from SQLite and removing the
      * item from the list by its position
      */
-    public void deleteNote(int position) {
+    public static void deleteNote(int position) {
         // deleting the note from db
         db.deleteNote(notesList.get(position));
 

@@ -142,7 +142,8 @@ public class ChangePasswordFragment extends DialogFragment {
                         notes.addAll(NoteListActivity.db.getAllNotes());
                         NoteListActivity.db.close();                  // before deleting database unreferenced all database connections
                         context.getApplicationContext().deleteDatabase("notes_db");
-                        new Engine(new WeakReference<Context>(context), new WeakReference<ChangePasswordFragment>(this)).execute(rePassword.getText().toString());
+                        new Engine(new WeakReference<Context>(context),
+                                new WeakReference<ChangePasswordFragment>(this)).execute(rePassword.getText().toString());
                         //generateKey(rePassword.getText().toString());
                         //dismiss();
                     }

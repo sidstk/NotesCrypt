@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.security.keystore.KeyProperties;
 import android.support.design.widget.TextInputEditText;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -50,21 +51,22 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+
 import static com.example.sid.NotesCrypt.activity.NoteListActivity.mAdapter;
-import static com.example.sid.NotesCrypt.activity.NoteListActivity.noNotesView;
 import static com.example.sid.NotesCrypt.activity.NoteListActivity.notesList;
 
 
 public class NoteActivity extends AppCompatActivity {
 
-    TextInputEditText noteTitle;
-    TextInputEditText noteText;
+    private TextInputEditText noteTitle;
+    private TextInputEditText noteText;
     private int id;
     private int position;
     private Menu menu;
     private boolean titleChange;
     private boolean noteChnage;
     private Cipher mCipher;
+    private boolean saved = false;
     //public static NoteActivity instance = null;
     private static final String SAVE = "save";
     private static final String UPDATE = "update";
@@ -126,6 +128,7 @@ public class NoteActivity extends AppCompatActivity {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+
                             if (n != null) {
                                 // adding new note to array list at 0 position
                                 notesList.add(0, n);
@@ -135,6 +138,7 @@ public class NoteActivity extends AppCompatActivity {
                             }
 
                             NoteListActivity.toggleEmptyNotes();
+
                         }
                     });
 
@@ -182,12 +186,13 @@ public class NoteActivity extends AppCompatActivity {
             ((Activity)contextWeakReference.get()).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mAdapter.notifyItemChanged(position);
+
+                    NoteListActivity.mAdapter.notifyItemChanged(position);
+                    NoteListActivity.toggleEmptyNotes();
                 }
             });
 
 
-            NoteListActivity.toggleEmptyNotes();
         }
         @Override
         protected void onPreExecute() {
@@ -215,38 +220,24 @@ public class NoteActivity extends AppCompatActivity {
             super.onPostExecute(aVoid);
             db.close();
             progress.dismiss();
-            ((Activity)contextWeakReference.get()).finish();
+            NoteActivity noteActivity = (NoteActivity) contextWeakReference.get();
+            noteActivity.saved = true;
+            Toast.makeText(contextWeakReference.get(), "Saved", Toast.LENGTH_SHORT).show();
         }
     }
 
 
 
-
-    private void toggleEmptyNotes() {
-        // you can check notesList.size() > 0
-
-        if (NoteListActivity.db.getNotesCount() > 0) {
-            noNotesView.setVisibility(View.GONE);
-        } else {
-            noNotesView.setVisibility(View.VISIBLE);
-        }
-    }
 
 
 
 
     private void deleteNote(int id,int position) {
 
-        if(position != -1 && id != 0){
-            // deleting the note from db
-            NoteListActivity.db.deleteNote(notesList.get(position));
+       if(position!=-1){
+           NoteListActivity.deleteNote(position);
+       }
 
-            // removing the note from the list
-            notesList.remove(position);
-            mAdapter.notifyItemRemoved(position);
-        }
-
-        toggleEmptyNotes();
     }
 
     private boolean checkEmpty(String note, String title){
@@ -290,28 +281,25 @@ public class NoteActivity extends AppCompatActivity {
                         .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+                                if(position!=-1){
+                                    if(use_fingerprint){
 
-                                if(use_fingerprint){
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            ah.listener(mCipher,DEFAULT_KEY_NAME,DELETE, position);
-                                        }
-                                    });
+                                                AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                                ah.listener(mCipher,DEFAULT_KEY_NAME,DELETE, position);
 
+                                    }
+
+                                    else{
+                                                AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
+                                                ah.listener(DELETE, position);
+
+                                    }
                                 }
-
                                 else{
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                            ah.listener(DELETE, position);
-                                        }
-                                    });
-
+                                    dialogInterface.dismiss();
+                                    finish();
                                 }
+
 
                             }
                         })
@@ -348,24 +336,15 @@ public class NoteActivity extends AppCompatActivity {
                                         //new SaveData().execute("addNote",noteText.getText().toString(),noteTitle.getText().toString());
                                         //finish();
                                         if(use_fingerprint){
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
                                                     ah.listener(mCipher,DEFAULT_KEY_NAME,SAVE, position);
-                                                }
-                                            });
 
                                         }
 
                                         else{
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
                                                     ah.listener(SAVE, position);
-                                                }
-                                            });
+
 
                                         }
 
@@ -392,24 +371,17 @@ public class NoteActivity extends AppCompatActivity {
                                         //finish();
                                         //new SaveData().execute("updateNote",noteText.getText().toString(),noteTitle.getText().toString(),String.valueOf(position));
                                         if(use_fingerprint){
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
                                                     ah.listener(mCipher,DEFAULT_KEY_NAME,UPDATE, position);
-                                                }
-                                            });
+
+
 
                                         }
 
                                         else{
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
                                                     ah.listener(UPDATE, position);
-                                                }
-                                            });
+
 
                                         }
 
@@ -425,6 +397,29 @@ public class NoteActivity extends AppCompatActivity {
                     }
                     return true;
                 }
+            case android.R.id.home:
+                if( !saved ) {
+                    new AlertDialog.Builder(NoteActivity.this)
+                            .setTitle("Leave current activity")
+                            .setMessage("All unsaved data will be lost")
+                            .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            })
+                            .setNegativeButton("Stay", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            })
+                            .setCancelable(false)
+                            .show();
+                }
+                else
+                    finish();
+                return true;
             default: return false;
         }
     }
@@ -496,13 +491,19 @@ public class NoteActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note);
-        //LeakCanary.install(getApplication());
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            // Show the Up button in the action bar.
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+        }
         mSharedPreferences = getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
 
         noteTitle = findViewById(R.id.noteTitle);
         noteText = findViewById(R.id.noteText);
         titleChange = false;
         noteChnage = false;
+        saved = true;
         use_fingerprint = mSharedPreferences.getBoolean("fingerprint",true) && mSharedPreferences.getBoolean("use_fingerprint_future",true);
 
         final TextView dateView = findViewById(R.id.dateView);
@@ -533,7 +534,8 @@ public class NoteActivity extends AppCompatActivity {
         }
 
         else{
-            note = NoteListActivity.db.getNote(id);
+            DatabaseHelper db = new DatabaseHelper(this);
+            note = db.getNote(id);
             noteTitle.setText(getData(note.getTitle()));
 
             noteText.setText(getData(note.getNote()));
@@ -565,8 +567,7 @@ public class NoteActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
-                titleChange = true;
-                noteChnage = true;
+                saved = false;
             }
 
             @Override
@@ -580,7 +581,7 @@ public class NoteActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
 
-        if(titleChange || noteChnage) {
+        if( !saved ) {
             new AlertDialog.Builder(NoteActivity.this)
                     .setTitle("Leave current activity")
                     .setMessage("All unsaved data will be lost")
