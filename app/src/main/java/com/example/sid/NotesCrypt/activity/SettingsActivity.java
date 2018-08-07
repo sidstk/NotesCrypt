@@ -10,7 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Switch;
 
-import com.example.sid.NotesCrypt.AuthenticationHelper;
+import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.fingerprint.ChangePasswordFragment;
 

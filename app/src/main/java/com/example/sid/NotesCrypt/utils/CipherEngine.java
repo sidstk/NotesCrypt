@@ -1,10 +1,12 @@
-package com.example.sid.NotesCrypt;
+package com.example.sid.NotesCrypt.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.util.Base64;
 import android.util.Log;
+
+import com.example.sid.NotesCrypt.R;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -72,7 +74,6 @@ public class CipherEngine {
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
         final SecretKey keyStoreKey = (SecretKey) keyStore.getKey(AES_KEY, null);
-        //dcipher.init(Cipher.DECRYPT_MODE, keyStoreKey, new IvParameterSpec(iv));
 
         dcipher.init(Cipher.DECRYPT_MODE, keyStoreKey, new GCMParameterSpec(128,iv));
 
@@ -88,7 +89,6 @@ public class CipherEngine {
         keyStore.load(null);
         final SecretKey keyStoreKey = (SecretKey) keyStore.getKey(AES_KEY, null);
 
-        //ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey,new IvParameterSpec(IV));
 
         byte[] iv = new byte[12];
         final SecureRandom secureRandom = new SecureRandom();
@@ -98,7 +98,6 @@ public class CipherEngine {
         ecipher.init(Cipher.ENCRYPT_MODE, keyStoreKey, gcm);
         //final byte[] IV = ecipher.getParameters().getParameterSpec(GCMParameterSpec.class).getIV();  // AES/GCM/NoPadding requires only 12 byte long IVs
 
-        Log.i("info",Base64.encodeToString(iv,Base64.NO_WRAP));
         return  Base64.encodeToString(iv,
                 Base64.NO_WRAP)+Base64.encodeToString(ecipher.doFinal(text.getBytes("UTF-8")),
                 Base64.NO_WRAP);

@@ -1,20 +1,17 @@
-package com.example.sid.NotesCrypt;
+package com.example.sid.NotesCrypt.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.example.sid.NotesCrypt.fingerprint.FingerprintAuthenticationDialogFragment;
+import com.example.sid.NotesCrypt.R;
+import com.example.sid.NotesCrypt.fingerprint.AuthenticationDialogFragment;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -27,9 +24,7 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
@@ -120,11 +115,13 @@ public class AuthenticationHelper {
         }
     }
 
+    /** Triggering for passwordless authentication, i.e fingerprint **/
     public void listener(final Cipher cipher, final String keyName, final String cause, final int position){
         AuthenticationListener al = new AuthenticationListener(cipher, keyName, cause, position, new WeakReference<Context>(mContext));
         al.trigger();
     }
 
+    /** Triggering for authentication with password **/
     public void listener(final String cause, final int position){
         AuthenticationListener al = new AuthenticationListener(null, null, cause, position, new WeakReference<Context>(mContext));
         al.passwordTrigger();
@@ -132,11 +129,11 @@ public class AuthenticationHelper {
 
     private static class AuthenticationListener {
 
-        Cipher mCipher;
-        String mKeyName;
-        String mCause;
-        int listPosition;
-        AppCompatActivity activity;
+        private Cipher mCipher;
+        private String mKeyName;
+        private String mCause;
+        private int listPosition;
+        private AppCompatActivity activity;
         private final String DIALOG_FRAGMENT_TAG = "authenticationFragment";
         private SharedPreferences mSharedPreferences;
 
@@ -159,23 +156,22 @@ public class AuthenticationHelper {
             // of the fingerprint.
             if (AuthenticationHelper.initCipher(mCipher, mKeyName)) {
 
-                // Show the fingerprint dialog. The user has the option to use the fingerprint with
-                // crypto, or you can fall back to using a server-side verified password.
+
                 Log.i("info","key valid");
-                FingerprintAuthenticationDialogFragment fragment
-                        = new FingerprintAuthenticationDialogFragment();
+                AuthenticationDialogFragment fragment
+                        = new AuthenticationDialogFragment();
                 fragment.setCause(mCause);
                 fragment.setListPosition(listPosition);
                 fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
 
-                boolean useFingerprintPreference = mSharedPreferences.getBoolean("use_fingerprint_future", true);
+                boolean useFingerprintPreference = mSharedPreferences.getBoolean(activity.getApplicationContext().getString(R.string.use_fingerprint_future), true);
 
                 if (useFingerprintPreference) {
                     fragment.setStage(
-                            FingerprintAuthenticationDialogFragment.Stage.FINGERPRINT);
+                            AuthenticationDialogFragment.Stage.FINGERPRINT);
                 } else {
                     fragment.setStage(
-                            FingerprintAuthenticationDialogFragment.Stage.PASSWORD);
+                            AuthenticationDialogFragment.Stage.PASSWORD);
                 }
 
                 fragment.show(activity.getFragmentManager(), DIALOG_FRAGMENT_TAG);
@@ -187,24 +183,24 @@ public class AuthenticationHelper {
                 // and ask the user if they want to authenticate with fingerprints in the
                 // future
                 Log.i("info","key invalid");
-                FingerprintAuthenticationDialogFragment fragment
-                        = new FingerprintAuthenticationDialogFragment();
+                AuthenticationDialogFragment fragment
+                        = new AuthenticationDialogFragment();
                 fragment.setCause(mCause);
                 fragment.setListPosition(listPosition);
                 fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
                 fragment.setStage(
-                        FingerprintAuthenticationDialogFragment.Stage.NEW_FINGERPRINT_ENROLLED);
+                        AuthenticationDialogFragment.Stage.NEW_FINGERPRINT_ENROLLED);
                 fragment.show(activity.getFragmentManager(), DIALOG_FRAGMENT_TAG);
             }
         }
 
         private void passwordTrigger(){
-            FingerprintAuthenticationDialogFragment fragment
-                    = new FingerprintAuthenticationDialogFragment();
+            AuthenticationDialogFragment fragment
+                    = new AuthenticationDialogFragment();
             fragment.setCause(mCause);
             fragment.setListPosition(listPosition);
             fragment.setStage(
-                    FingerprintAuthenticationDialogFragment.Stage.PASSWORD);
+                    AuthenticationDialogFragment.Stage.PASSWORD);
             fragment.show(activity.getFragmentManager(), DIALOG_FRAGMENT_TAG);
         }
     }

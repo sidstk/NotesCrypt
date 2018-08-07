@@ -7,12 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.sid.NotesCrypt.CipherEngine;
+import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.database.model.Note;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
@@ -93,7 +92,6 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.MyViewHolder
             e.printStackTrace();
         }
 
-        // Displaying dot from HTML character code
 
         // Formatting and displaying timestamp
         holder.timestamp.setText(formatDate(note.getTimestamp()));
@@ -106,9 +104,9 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.MyViewHolder
 
 
     /**
-     * Formatting timestamp to `MMM d` format
-     * Input: 2018-02-21 00:15:42
-     * Output: Feb 21
+     * Formatting timestamp to `MMM d, yyyy` format
+     * Input: 2018-07-21 00:15:42
+     * Output: Jul 21 2018
      */
     private String formatDate(String dateStr) {
         try {

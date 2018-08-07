@@ -4,10 +4,6 @@
 
     <string name="name_of_shred_preference">name_of_shared_preference</string>
 
-    <string name="SettingsActivity">SettingsActivity</string>
-    <string name="MainActivity">MainActivity</string>
-    <string name="NoteListActivity">NoteListActivity</string>
-    <string name="NoteActivity">NoteActivity</string>
     <!-- Strings related to login/signup form -->
 
     <string name="password_empty">password can\'t be empty</string>
@@ -23,45 +19,41 @@
     <string name="AES_KEY">secret_key</string>
     <string name="AES_KEY_TEMP">secret_key_temp</string>
     <string name="privalias">privkey</string>
-    <string name="DEFAULT_KEY_NAME">default_key</string>    <!---->
+    <string name="DEFAULT_KEY_NAME">default_key</string>
+    <!---->
 
 
 
     <string name="action_settings">Settings</string>
     <string name="activity_title_home">Notes</string>
     <string name="msg_no_notes">No notes found!</string>
-    <string name="lbl_new_note_title">New Note</string>
-    <string name="lbl_edit_note_title">Edit Note</string>
-    <string name="hint_enter_note">Enter your note!</string>
-    <string name="prompt_alias">Alias</string>
-    <string name="prompt_secret">Secret</string>
+
+    <string name="prompt_alias">Title</string>
+    <string name="prompt_secret">Content</string>
 
     <string name="cancel">Cancel</string>
     <string name="use_password">Use password</string>
-    <string name="sign_in">Sign in</string>
+    <string name="sign_in">Authenticate</string>
     <string name="ok">OK</string>
     <string name="password">Password</string>
     <string name="use_fingerprint_future">use_fingerprint_future</string>
     <string name="fingerprint">fingerprint</string>
     <string name="first_run">first_run</string>
     <string name="fingerprint_description">Confirm fingerprint to continue</string>
+    <string name="fingerprint_hint_dialog">Touch fingerprint sensor</string>
     <string name="fingerprint_hint">Touch fingerprint sensor \n to verify your identity</string>
+
     <string name="password_description">Enter your password to continue</string>
 
     <string name="fingerprint_not_recognized">Fingerprint not recognized. Try again</string>
     <string name="fingerprint_success">Fingerprint recognized</string>
 
     <string name="new_fingerprint_enrolled_description">A new fingerprint was added to this device, so your password is required.</string>
-    <string name="use_fingerprint_in_future">Use fingerprint in the future</string>
-    <string name="use_fingerprint_to_authenticate_title">Use fingerprint to authenticate</string>
-    <string name="use_fingerprint_to_authenticate_key">use_fingerprint_to_authenticate_key</string>
-    <string name="description_bugdroid_icon">Android bugdroid image</string>
+    <string name="use_fingerprint_in_future">Use fingerprint in future</string>
     <string name="description_fingerprint_icon">Fingerprint icon</string>
     <string name="title_activity_settings">Settings</string>
 
-    <!-- Strings related to Settings -->
 
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

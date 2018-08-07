@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
 import android.security.keystore.KeyProperties;
@@ -14,7 +13,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.util.AdapterListUpdateCallback;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,7 +26,7 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.example.sid.NotesCrypt.AuthenticationHelper;
+import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.database.DatabaseHelper;
 import com.example.sid.NotesCrypt.database.model.Note;
@@ -70,13 +68,6 @@ public class NoteListActivity extends AppCompatActivity {
 
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        notesList.clear();
-
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.menu_settings,menu);
@@ -98,9 +89,6 @@ public class NoteListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notelist);
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
-        //LeakCanary.install(getApplication());
         coordinatorLayout = findViewById(R.id.coordinator_layout);
         recyclerView = findViewById(R.id.recycler_view);
         noNotesView = findViewById(R.id.empty_notes_view);
@@ -110,7 +98,6 @@ public class NoteListActivity extends AppCompatActivity {
         db = new DatabaseHelper(getApplicationContext());
 
         notesList.addAll(db.getAllNotes());
-        //mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -137,6 +124,8 @@ public class NoteListActivity extends AppCompatActivity {
          * with options to choose
          * Edit and Delete
          * */
+
+
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(this,
                 recyclerView, new RecyclerTouchListener.ClickListener() {
             @Override
@@ -144,10 +133,6 @@ public class NoteListActivity extends AppCompatActivity {
                 showActionsDialog(position);
             }
 
-            @Override
-            public void onLongClick(View view, int position) {
-
-            }
         }));
 
 

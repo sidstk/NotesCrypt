@@ -21,10 +21,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.NoteListActivity" />
-        <activity android:name=".activity.NoteActivity" />
+        <activity android:name=".activity.NoteListActivity"
+            android:configChanges="orientation|screenSize"
+            />
+        <activity android:name=".activity.NoteActivity"
+            android:configChanges="orientation|screenSize"/>
         <activity
             android:name=".activity.SettingsActivity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings" />
     </application>
 

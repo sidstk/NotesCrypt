@@ -21,8 +21,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.sid.NotesCrypt.AuthenticationHelper;
-import com.example.sid.NotesCrypt.CipherEngine;
+import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
+import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.activity.NoteActivity;
 import com.example.sid.NotesCrypt.activity.NoteListActivity;
 import com.example.sid.NotesCrypt.R;
@@ -48,7 +48,7 @@ import static com.example.sid.NotesCrypt.activity.MainActivity.DEFAULT_KEY_NAME;
  * A dialog which uses fingerprint APIs to authenticate the user, and falls back to password
  * authentication if fingerprint is not available.
  */
-public class FingerprintAuthenticationDialogFragment extends DialogFragment
+public class AuthenticationDialogFragment extends DialogFragment
         implements TextView.OnEditorActionListener, FingerprintUiHelper.Callback {
 
     private Button mCancelButton;
@@ -101,6 +101,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         mSecondDialogButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mInputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
                 if (mStage == Stage.FINGERPRINT) {
                     goToBackup();
                 } else {
@@ -195,7 +196,8 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
         activity = new WeakReference<>(getActivity());
         contextWeakReference = new WeakReference<>(context);
-        mInputMethodManager = context.getSystemService(InputMethodManager.class);
+        //mInputMethodManager = context.getSystemService(InputMethodManager.class);
+        mInputMethodManager = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
         mSharedPreferences = context.getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
     }
 
@@ -269,7 +271,8 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     private final Runnable mShowKeyboardRunnable = new Runnable() {
         @Override
         public void run() {
-            mInputMethodManager.showSoftInput(mPassword, 0);
+            //mInputMethodManager.showSoftInput(mPassword, 0);
+            mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
         }
     };
 
@@ -288,6 +291,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
                 mSecondDialogButton.setText(R.string.ok);
                 mFingerprintContent.setVisibility(View.GONE);
                 mBackupContent.setVisibility(View.VISIBLE);
+                mPassword.postDelayed(mShowKeyboardRunnable, 200);
                 if (mStage == Stage.NEW_FINGERPRINT_ENROLLED) {
                     mPasswordDescriptionTextView.setVisibility(View.GONE);
                     mNewFingerprintEnrolledTextView.setVisibility(View.VISIBLE);
@@ -347,7 +351,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
                 noteList.startNoteActivity(NoteListActivity.notesList.get(listPosition).getId(),listPosition);
 
             else if(mCause == "delete")
-                noteList.deleteNote(listPosition);
+                NoteListActivity.deleteNote(listPosition);
         }
 
         else if(context instanceof NoteActivity){

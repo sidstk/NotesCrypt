@@ -20,12 +20,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.sid.NotesCrypt.AuthenticationHelper;
-import com.example.sid.NotesCrypt.CipherEngine;
+import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
+import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.database.DatabaseHelper;
 import com.example.sid.NotesCrypt.database.model.Note;

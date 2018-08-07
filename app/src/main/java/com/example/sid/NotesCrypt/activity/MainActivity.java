@@ -40,11 +40,10 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.example.sid.NotesCrypt.AuthenticationHelper;
-import com.example.sid.NotesCrypt.CipherEngine;
+import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
+import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.fingerprint.BottomSheetFragment;
-import com.squareup.leakcanary.LeakCanary;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -409,9 +408,6 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //startActivity(new Intent(MainActivity.this,endc.class));
-        
-        //setContentView(R.layout.activity_register);
 
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);

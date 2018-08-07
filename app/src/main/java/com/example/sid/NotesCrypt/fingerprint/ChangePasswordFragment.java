@@ -19,7 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
-import com.example.sid.NotesCrypt.CipherEngine;
+import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.activity.NoteListActivity;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.database.DatabaseHelper;
@@ -61,8 +61,6 @@ public class ChangePasswordFragment extends DialogFragment {
     private ProgressBar pg;
     private Context context;
     private static final String PBE_ALGORITHM = "PBKDF2WithHmacSHA1";
-    private static final String AES_KEY = "secret_key";
-    private Activity mActivity;
     private static List<Note> notes = new ArrayList<>();
 
     public ChangePasswordFragment() {
@@ -73,7 +71,6 @@ public class ChangePasswordFragment extends DialogFragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         this.context = context;
-        //mActivity = (Activity)context;
     }
 
     @Override
