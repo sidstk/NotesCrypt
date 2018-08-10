@@ -37,23 +37,27 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class CipherEngine {
 
-    private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
-    private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
-    private static final String PBE_ALGORITHM = "PBKDF2WithHmacSHA1";
-    private static final String AES_KEY = "secret_key";
+    public static final String AES_ALGORITHM = "AES/GCM/NoPadding";
+    public static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+    public static final String PBE_ALGORITHM = "PBKDF2WithHmacSHA1";
+    public static final String AES_KEY = "secret_key";
+    public static final String AES_KEY_TEMP = "secret_key_temp";
     private static final String test = "testdata";
+    public static final String privalias = "privkey";
+    public static final String DEFAULT_KEY_NAME = "default_key";
+
 
 
     private static PrivateKey getPrivKey(Context mContext) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
-        return  (PrivateKey) keyStore.getKey(mContext.getString(R.string.privalias), null);
+        return  (PrivateKey) keyStore.getKey(privalias, null);
     }
 
     private  PublicKey getPubKey(Context mContext) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
-        return  keyStore.getCertificate(mContext.getString(R.string.privalias)).getPublicKey();
+        return  keyStore.getCertificate(privalias).getPublicKey();
     }
 
 
@@ -135,7 +139,8 @@ public class CipherEngine {
         final int iterationCount = 4000;
 
         final Context context = contextWeakReference.get();
-        final SharedPreferences shp = context.getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        final SharedPreferences shp = context.getApplicationContext().getSharedPreferences(context.getApplicationContext().getString(R.string.shred_preference),
+                Context.MODE_PRIVATE);
 
         final Cipher dcipher = Cipher.getInstance(RSA_ALGORITHM);
         dcipher.init(Cipher.DECRYPT_MODE,getPrivKey(contextWeakReference.get()));

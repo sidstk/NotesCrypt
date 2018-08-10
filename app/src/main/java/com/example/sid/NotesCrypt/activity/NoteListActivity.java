@@ -30,6 +30,7 @@ import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.database.DatabaseHelper;
 import com.example.sid.NotesCrypt.database.model.Note;
+import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.utils.MyDividerItemDecoration;
 import com.example.sid.NotesCrypt.utils.RecyclerTouchListener;
 import com.example.sid.NotesCrypt.view.NotesAdapter;
@@ -57,10 +58,7 @@ public class NoteListActivity extends AppCompatActivity {
 
 
     private static final String SECRET_MESSAGE = "Very secret message";
-    public static final String DEFAULT_KEY_NAME = "default_key";
 
-    private final String EDIT = "edit";
-    private final String DELETE = "delete";
 
     private SharedPreferences mSharedPreferences;
     private Cipher mCipher;
@@ -119,12 +117,6 @@ public class NoteListActivity extends AppCompatActivity {
 
         toggleEmptyNotes();
 
-        /**
-         * On long press on RecyclerView item, open alert dialog
-         * with options to choose
-         * Edit and Delete
-         * */
-
 
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(this,
                 recyclerView, new RecyclerTouchListener.ClickListener() {
@@ -136,7 +128,8 @@ public class NoteListActivity extends AppCompatActivity {
         }));
 
 
-        mSharedPreferences = getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        mSharedPreferences = getApplicationContext().getSharedPreferences(getApplicationContext().getString(R.string.shred_preference),
+                Context.MODE_PRIVATE);
 
 
     }
@@ -186,47 +179,6 @@ public class NoteListActivity extends AppCompatActivity {
 
 
 
-    /**
-     * Inserting new note in db
-     * and refreshing the list
-     */
-    private void createNote(String note) {
-        // inserting note in db and getting
-        // newly inserted note id
-        long id = db.insertNote(note,"",null);
-
-        // get the newly inserted note from db
-        Note n = db.getNote(id);
-
-        if (n != null) {
-            // adding new note to array list at 0 position
-            notesList.add(0, n);
-
-            // refreshing the list
-            mAdapter.notifyDataSetChanged();
-
-            toggleEmptyNotes();
-        }
-    }
-
-    /**
-     * Updating note in db and updating
-     * item in the list by its position
-     */
-    private void updateNote(String note, int position) {
-        Note n = notesList.get(position);
-        // updating note text
-        n.setNote(note);
-
-        // updating note in db
-        db.updateNote(n);
-
-        // refreshing the list
-        notesList.set(position, n);
-        mAdapter.notifyItemChanged(position);
-
-        toggleEmptyNotes();
-    }
 
     /**
      * Deleting note from SQLite and removing the
@@ -251,9 +203,10 @@ public class NoteListActivity extends AppCompatActivity {
     private void showActionsDialog(final int position) {
         CharSequence colors[] = new CharSequence[]{"Edit", "Delete"};
 
-        final boolean use_fingerprint = mSharedPreferences.getBoolean("fingerprint",true) && mSharedPreferences.getBoolean("use_fingerprint_future",true);
+        final boolean use_fingerprint = mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.fingerprint),true) &&
+                mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.use_fingerprint_future),true);
         if(use_fingerprint) {
-            AuthenticationHelper.createKey(DEFAULT_KEY_NAME,true, use_fingerprint);
+            AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,true, use_fingerprint);
 
             try {
                 mCipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
@@ -276,12 +229,14 @@ public class NoteListActivity extends AppCompatActivity {
 
                     if(use_fingerprint){
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(mCipher,DEFAULT_KEY_NAME,EDIT, position);
+                        ah.listener(mCipher,CipherEngine.DEFAULT_KEY_NAME,
+                                getApplicationContext().getString(R.string.edit),
+                                position);
                     }
 
                     else{
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(EDIT, position);      // only password based authentication
+                        ah.listener(getApplicationContext().getString(R.string.edit), position);      // only password based authentication
                     }
 
 
@@ -290,13 +245,14 @@ public class NoteListActivity extends AppCompatActivity {
 
                     if(use_fingerprint) {
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(mCipher, DEFAULT_KEY_NAME, DELETE, position);
+                        ah.listener(mCipher, CipherEngine.DEFAULT_KEY_NAME,
+                                getApplicationContext().getString(R.string.delete),
+                                position);
                     }
                     else{
                         AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(DELETE, position);
+                        ah.listener(getApplicationContext().getString(R.string.delete), position);
                     }
-                    //deleteNote(position);
                 }
             }
         });
@@ -311,13 +267,6 @@ public class NoteListActivity extends AppCompatActivity {
         it.putExtra("position",position);
         startActivity(it);
     }
-    /**
-     * Shows alert dialog with EditText options to enter / edit
-     * a note.
-     * when shouldUpdate=true, it automatically displays old note and changes the
-     * button text to UPDATE
-     */
-
 
     /**
      * Toggling list and empty notes view
@@ -335,7 +284,6 @@ public class NoteListActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        //db = new DatabaseHelper(this);
         super.onResume();
     }
 

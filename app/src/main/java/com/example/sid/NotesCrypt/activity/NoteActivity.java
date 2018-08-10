@@ -66,11 +66,6 @@ public class NoteActivity extends AppCompatActivity {
     private boolean noteChnage;
     private Cipher mCipher;
     private boolean saved = false;
-    //public static NoteActivity instance = null;
-    private static final String SAVE = "save";
-    private static final String UPDATE = "update";
-    private static final  String DELETE = "delete";
-    public static final String DEFAULT_KEY_NAME = "default_key";
     private boolean use_fingerprint;
     private SharedPreferences mSharedPreferences;
 
@@ -206,10 +201,11 @@ public class NoteActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(String... strings) {
-            if(strings[0] == SAVE)
+            Context context = contextWeakReference.get();
+            if(strings[0].equals(context.getApplicationContext().getString(R.string.save)))
             createNote(strings[1],strings[2]);
 
-            else if(strings[0] == UPDATE)
+            else if(strings[0].equals(context.getApplicationContext().getString(R.string.update)))
                 updateNote(strings[1],strings[2],Integer.parseInt(strings[3]));
             return null;
         }
@@ -221,7 +217,7 @@ public class NoteActivity extends AppCompatActivity {
             progress.dismiss();
             NoteActivity noteActivity = (NoteActivity) contextWeakReference.get();
             noteActivity.saved = true;
-            Toast.makeText(contextWeakReference.get(), "Saved", Toast.LENGTH_SHORT).show();
+            Toast.makeText(contextWeakReference.get(), "Note saved", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -284,13 +280,15 @@ public class NoteActivity extends AppCompatActivity {
                                     if(use_fingerprint){
 
                                                 AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                ah.listener(mCipher,DEFAULT_KEY_NAME,DELETE, position);
+                                                ah.listener(mCipher,CipherEngine.DEFAULT_KEY_NAME,
+                                                        getApplicationContext().getString(R.string.delete),
+                                                        position);
 
                                     }
 
                                     else{
                                                 AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                ah.listener(DELETE, position);
+                                                ah.listener(getApplication().getString(R.string.delete), position);
 
                                     }
                                 }
@@ -336,13 +334,15 @@ public class NoteActivity extends AppCompatActivity {
                                         //finish();
                                         if(use_fingerprint){
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    ah.listener(mCipher,DEFAULT_KEY_NAME,SAVE, position);
+                                                    ah.listener(mCipher,CipherEngine.DEFAULT_KEY_NAME,
+                                                            getApplicationContext().getString(R.string.save),
+                                                            position);
 
                                         }
 
                                         else{
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    ah.listener(SAVE, position);
+                                                    ah.listener(getApplication().getString(R.string.save), position);
 
 
                                         }
@@ -371,7 +371,9 @@ public class NoteActivity extends AppCompatActivity {
                                         //new SaveData().execute("updateNote",noteText.getText().toString(),noteTitle.getText().toString(),String.valueOf(position));
                                         if(use_fingerprint){
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    ah.listener(mCipher,DEFAULT_KEY_NAME,UPDATE, position);
+                                                    ah.listener(mCipher, CipherEngine.DEFAULT_KEY_NAME,
+                                                            getApplicationContext().getString(R.string.update),
+                                                            position);
 
 
 
@@ -379,7 +381,7 @@ public class NoteActivity extends AppCompatActivity {
 
                                         else{
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
-                                                    ah.listener(UPDATE, position);
+                                                    ah.listener(getApplication().getString(R.string.update), position);
 
 
                                         }
@@ -435,7 +437,8 @@ public class NoteActivity extends AppCompatActivity {
     }
 
     public void save(){
-    new SaveData(new WeakReference<Context>(this)).execute(SAVE,noteText.getText().toString(),noteTitle.getText().toString());
+    new SaveData(new WeakReference<Context>(this)).execute(getApplicationContext().getString(R.string.save),
+            noteText.getText().toString(),noteTitle.getText().toString());
 
     }
 
@@ -447,7 +450,8 @@ public class NoteActivity extends AppCompatActivity {
 
     public void update(){
 
-    new SaveData(new WeakReference<Context>(this)).execute(UPDATE,noteText.getText().toString(),noteTitle.getText().toString(),String.valueOf(position));
+    new SaveData(new WeakReference<Context>(this)).execute(getApplicationContext().getString(R.string.update),
+            noteText.getText().toString(),noteTitle.getText().toString(),String.valueOf(position));
 
     }
 
@@ -496,14 +500,16 @@ public class NoteActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeButtonEnabled(true);
         }
-        mSharedPreferences = getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        mSharedPreferences = getApplicationContext().getSharedPreferences(getApplicationContext().getString(R.string.shred_preference),
+                Context.MODE_PRIVATE);
 
         noteTitle = findViewById(R.id.noteTitle);
         noteText = findViewById(R.id.noteText);
         titleChange = false;
         noteChnage = false;
         saved = true;
-        use_fingerprint = mSharedPreferences.getBoolean("fingerprint",true) && mSharedPreferences.getBoolean("use_fingerprint_future",true);
+        use_fingerprint = mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.fingerprint),true) &&
+                mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.use_fingerprint_future),true);
 
         final TextView dateView = findViewById(R.id.dateView);
 
@@ -577,36 +583,31 @@ public class NoteActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onBackPressed() {
+            @Override
+            public void onBackPressed() {
 
-        if( !saved ) {
-            new AlertDialog.Builder(NoteActivity.this)
-                    .setTitle("Leave current activity")
-                    .setMessage("All unsaved data will be lost")
-                    .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .setNegativeButton("Stay", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                        }
-                    })
-                    .setCancelable(false)
-                    .show();
-        }
+                if( !saved ) {
+                    new AlertDialog.Builder(NoteActivity.this)
+                            .setTitle("Leave current activity")
+                            .setMessage("All unsaved data will be lost")
+                            .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            })
+                            .setNegativeButton("Stay", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            })
+                            .setCancelable(false)
+                            .show();
+                }
 
-        else
-            super.onBackPressed();
+                else
+                    super.onBackPressed();
     }
 
-    @Override
-    protected void onDestroy() {
-        Log.i("info","noteacti ondestroy");
-        super.onDestroy();
-    }
 }

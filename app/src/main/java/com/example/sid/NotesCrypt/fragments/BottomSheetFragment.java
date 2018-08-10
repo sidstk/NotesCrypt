@@ -1,24 +1,27 @@
-package com.example.sid.NotesCrypt.fingerprint;
+package com.example.sid.NotesCrypt.fragments;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
-import android.support.design.widget.BottomSheetBehavior;
+import android.os.Handler;
 import android.support.design.widget.BottomSheetDialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.sid.NotesCrypt.activity.MainActivity;
 import com.example.sid.NotesCrypt.activity.NoteListActivity;
 import com.example.sid.NotesCrypt.R;
+import com.example.sid.NotesCrypt.fingerprint.FingerprintUiHelper;
 
-public class BottomSheetFragment extends BottomSheetDialogFragment implements FingerprintUiHelper.Callback{
+public class BottomSheetFragment extends BottomSheetDialogFragment implements FingerprintUiHelper.Callback {
 
     private FingerprintUiHelper mFingerprintUiHelper;
     private Activity activity;
@@ -41,12 +44,16 @@ public class BottomSheetFragment extends BottomSheetDialogFragment implements Fi
         v.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.onFailed();
                 dismiss();
             }
         });
         v.findViewById(R.id.cancelIcon).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.onFailed();
                 dismiss();
             }
         });
@@ -61,7 +68,6 @@ public class BottomSheetFragment extends BottomSheetDialogFragment implements Fi
     @Override
     public void onResume() {
         super.onResume();
-        Log.i("info","onResume");
         mFingerprintUiHelper.startListening(null);
 
     }
@@ -69,7 +75,6 @@ public class BottomSheetFragment extends BottomSheetDialogFragment implements Fi
     @Override
     public void onPause() {
 
-        Log.i("info","onPause");
         mFingerprintUiHelper.stopListening();
         super.onPause();
     }
@@ -77,7 +82,7 @@ public class BottomSheetFragment extends BottomSheetDialogFragment implements Fi
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        activity = (Activity) context;
+        activity = getActivity();
 
     }
 
@@ -89,7 +94,13 @@ public class BottomSheetFragment extends BottomSheetDialogFragment implements Fi
     }
 
     @Override
-    public void onError() {
+    public void onError(final int errId) {
+        if(errId == FingerprintManager.FINGERPRINT_ERROR_LOCKOUT || errId == FingerprintManager.FINGERPRINT_ERROR_LOCKOUT_PERMANENT){
+            MainActivity mainActivity = (MainActivity) getActivity();
+            mainActivity.onFailed();
+            dismiss();
+        }
+
 
     }
 }

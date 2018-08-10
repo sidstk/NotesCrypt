@@ -43,7 +43,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.R;
-import com.example.sid.NotesCrypt.fingerprint.BottomSheetFragment;
+import com.example.sid.NotesCrypt.fragments.BottomSheetFragment;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -73,13 +73,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class MainActivity extends AppCompatActivity{
 
 
-    private static final String privalias = "privkey";
 
-    private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
-    private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
-    private static final String PBE_ALGORITHM = "PBKDF2WithHmacSHA1";
-    private static final String AES_KEY = "secret_key";
-    public static final String DEFAULT_KEY_NAME = "default_key";
 
     private TextInputEditText pwd;
     private TextInputEditText repwd;
@@ -89,12 +83,11 @@ public class MainActivity extends AppCompatActivity{
 
     private InputMethodManager inputMethodManager;
     private SharedPreferences shp;
-    boolean a = true;
-    Runnable r1,r2,r3,r4;
+
+    Runnable r1,r2;
     Handler h1;
     KeyguardManager keyguardManager;
     FingerprintManager fingerprintManager;
-
 
     public static class CreateKeys extends AsyncTask<String,Void,Void>{
         private WeakReference<Context> contextWeakReference;
@@ -108,7 +101,7 @@ public class MainActivity extends AppCompatActivity{
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore");
             keyPairGenerator.initialize(
                     new KeyGenParameterSpec.Builder(
-                            privalias,
+                            CipherEngine.privalias,
                             KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
                             .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
                             .setKeySize(2048)
@@ -122,11 +115,11 @@ public class MainActivity extends AppCompatActivity{
             byte[] salt = new byte[32];         // salt must be atleast 32 bytes long
             final int iterationCount = 4000;
 
-
+            final Context context = contextWeakReference.get();
             final SecureRandom secureRandom = new SecureRandom();
             secureRandom.nextBytes(salt);
 
-            final SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGORITHM);
+            final SecretKeyFactory factory = SecretKeyFactory.getInstance(CipherEngine.PBE_ALGORITHM);
             final PBEKeySpec keySpec = new PBEKeySpec(pass.toCharArray(), salt, iterationCount,
                     256);
 
@@ -137,10 +130,10 @@ public class MainActivity extends AppCompatActivity{
             final SecretKey secret = new SecretKeySpec(secretKey.getEncoded(), "AES");
 
 
-            final SharedPreferences shp = contextWeakReference.get().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+            final SharedPreferences shp = context.getApplicationContext().getSharedPreferences(context.getApplicationContext().getString(R.string.shred_preference),
+                    Context.MODE_PRIVATE);
 
-            //ecipher = Cipher.getInstance("AESWrap","BC");
-            Cipher ecipher = Cipher.getInstance(RSA_ALGORITHM);
+            Cipher ecipher = Cipher.getInstance(CipherEngine.RSA_ALGORITHM);
             ecipher.init(Cipher.ENCRYPT_MODE,extractkey());
             shp.edit().putString("salt",Base64.encodeToString(ecipher.doFinal(salt), Base64.NO_WRAP)).apply();
 
@@ -151,7 +144,7 @@ public class MainActivity extends AppCompatActivity{
             keyStore.load(null);
 
             keyStore.setEntry(
-                    AES_KEY,
+                    CipherEngine.AES_KEY,
                     new KeyStore.SecretKeyEntry(secret),
                     new KeyProtection.Builder(KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
@@ -163,8 +156,7 @@ public class MainActivity extends AppCompatActivity{
         private PublicKey extractkey() throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            return keyStore.getCertificate(privalias).getPublicKey();
-            //Log.i("publickey",Base64.encodeToString(publicKey.getEncoded(), Base64.NO_WRAP));
+            return keyStore.getCertificate(CipherEngine.privalias).getPublicKey();
         }
 
         @Override
@@ -302,11 +294,12 @@ public class MainActivity extends AppCompatActivity{
     public void clickF(View v) {
 
 
-        SharedPreferences shp = getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        SharedPreferences shp = getApplicationContext().getSharedPreferences(getApplicationContext().getString(R.string.shred_preference),
+                Context.MODE_PRIVATE);
 
 
         if (shp.getBoolean(getString(R.string.first_run), true)) {       //handle user first time registration
-            Log.i("first_run", "true");
+            //Log.i("first_run", "true");
             if(doubleCheck()){
                 shp.edit().putBoolean(getString(R.string.first_run), false).apply();
                 if (checkBox.isChecked())
@@ -316,15 +309,16 @@ public class MainActivity extends AppCompatActivity{
 
                 doubleCheck();
                 if(shp.getBoolean(getString(R.string.fingerprint),true) && shp.getBoolean(getString(R.string.use_fingerprint_future),true)){
-                    AuthenticationHelper.createKey(DEFAULT_KEY_NAME,true,true);
+                    AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,true,true);
                 }
 
                 new CreateKeys(new WeakReference<Context>(this)).execute(pwd.getText().toString());
             }
-        } else {                                            //handle user every login
-            Log.i("first_run", "false");
+        } else {
+            //handle user login
+            //Log.i("first_run", "false");
             if(shp.getBoolean(getString(R.string.fingerprint),true) && shp.getBoolean(getString(R.string.use_fingerprint_future),true)){
-                AuthenticationHelper.createKey(DEFAULT_KEY_NAME,true,true);
+                AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,true,true);
             }
             checkPassword();
 
@@ -379,13 +373,13 @@ public class MainActivity extends AppCompatActivity{
 
 
             if(isKeyguardSecure()){
-                Log.i("intent","secure");
+                //Log.i("intent","secure");
 
                 h1.removeCallbacks(r2);
                 ChangeLayouts();
             }
             else{
-                Log.i("intent","not secure");
+                //Log.i("intent","not secure");
                 h1.postDelayed(r2,0);
             }
         }
@@ -403,7 +397,15 @@ public class MainActivity extends AppCompatActivity{
     }
 
 
-
+    public void onFailed(){
+        pwd.requestFocus();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+            }
+        },500);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -411,7 +413,8 @@ public class MainActivity extends AppCompatActivity{
 
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
-        shp = getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        shp = getApplicationContext().getSharedPreferences(getApplicationContext().getString(R.string.shred_preference),
+                Context.MODE_PRIVATE);
         inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
         handlers();
@@ -440,7 +443,7 @@ public class MainActivity extends AppCompatActivity{
     private void ChangeLayouts(){
         inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        if(shp.getBoolean("first_run",true)){
+        if(shp.getBoolean(getApplicationContext().getString(R.string.first_run),true)){
             setContentView(R.layout.activity_register);
             pwdInputLayout = findViewById(R.id.pwdInputLayout);
             repwdInputLayout = findViewById(R.id.repwdInputLayout);
@@ -567,7 +570,7 @@ public class MainActivity extends AppCompatActivity{
             }
             else{
 
-                AuthenticationHelper.createKey(DEFAULT_KEY_NAME,true,true);
+                AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,true,true);
 
                 pwd.postDelayed(new Runnable() {
                     @Override
@@ -612,7 +615,6 @@ public class MainActivity extends AppCompatActivity{
 
     private void handlers(){
 
-        //h2 = new Handler();
         h1 = new Handler();
 
 
@@ -629,7 +631,7 @@ public class MainActivity extends AppCompatActivity{
                             final Runnable r = this;
                             if(!isKeyguardSecure()){
 
-                                Log.i("info","showing dialog");
+                                //Log.i("info","showing dialog");
                                 new MaterialDialog.Builder(MainActivity.this)
                                         .title("Device is not secure!!")
                                         .content("Please enable lockscreen security in your device's Settings")
@@ -656,7 +658,7 @@ public class MainActivity extends AppCompatActivity{
                                         .show();
                             }
                             else{
-                                Log.i("info","exiting handler");
+                                //Log.i("info","exiting handler");
                                 //h2.removeCallbacks(this);
                                 h1.removeCallbacks(r);
                                 runOnUiThread(new Runnable() {
@@ -683,7 +685,7 @@ public class MainActivity extends AppCompatActivity{
                         public void run() {
                             final Runnable r = this;
                             if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED){
-                                Log.i("fingerprint","permission missing");
+                                //Log.i("fingerprint","permission missing");
                                 new MaterialDialog.Builder(MainActivity.this)
                                         .title("Fingerprint permission missing!!")
                                         .content("This app needs fingerprint permission to work properly and securely")

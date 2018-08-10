@@ -23,7 +23,7 @@
         </activity>
         <activity android:name=".activity.NoteListActivity"
             android:configChanges="orientation|screenSize"
-            />
+            android:theme="@style/AppTheme" />
         <activity android:name=".activity.NoteActivity"
             android:configChanges="orientation|screenSize"/>
         <activity

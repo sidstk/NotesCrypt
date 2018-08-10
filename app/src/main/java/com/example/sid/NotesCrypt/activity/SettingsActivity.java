@@ -5,14 +5,13 @@ import android.content.SharedPreferences;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Switch;
 
 import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.R;
-import com.example.sid.NotesCrypt.fingerprint.ChangePasswordFragment;
+import com.example.sid.NotesCrypt.fragments.ChangePasswordFragment;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -29,12 +28,13 @@ public class SettingsActivity extends AppCompatActivity {
             actionBar.setHomeButtonEnabled(true);
         }
 
-        final SharedPreferences mSharedPreferences = getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        final SharedPreferences mSharedPreferences = getApplicationContext().
+                getSharedPreferences(getApplicationContext().getString(R.string.shred_preference),
+                Context.MODE_PRIVATE);
         aSwitch = findViewById(R.id.fingerprintToggle);
 
 
         if(!mSharedPreferences.getBoolean(getString(R.string.fingerprint),false)){
-            Log.i("info","disabling switch");
             aSwitch.setEnabled(false);
             findViewById(R.id.hardwareMissing).setVisibility(View.VISIBLE);
         }
@@ -51,11 +51,11 @@ public class SettingsActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(aSwitch.isChecked()){
                     AuthenticationHelper authenticationHelper = new AuthenticationHelper(SettingsActivity.this);
-                    authenticationHelper.listener("fp_true", -1);
+                    authenticationHelper.listener(getApplicationContext().getString(R.string.fp_true), -1);
                 }
                 else{
                     AuthenticationHelper authenticationHelper = new AuthenticationHelper(SettingsActivity.this);
-                    authenticationHelper.listener("fp_false", -1);
+                    authenticationHelper.listener(getApplicationContext().getString(R.string.fp_false), -1);
                 }
             }
         });

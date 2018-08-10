@@ -11,7 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.example.sid.NotesCrypt.R;
-import com.example.sid.NotesCrypt.fingerprint.AuthenticationDialogFragment;
+import com.example.sid.NotesCrypt.fragments.AuthenticationDialogFragment;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;

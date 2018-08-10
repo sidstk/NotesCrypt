@@ -26,8 +26,8 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
     /**
      * Constructor for {@link FingerprintUiHelper}.
      */
-    FingerprintUiHelper(FingerprintManager fingerprintManager,
-                        ImageView icon, TextView errorTextView, Callback callback) {
+    public FingerprintUiHelper(FingerprintManager fingerprintManager,
+                               ImageView icon, TextView errorTextView, Callback callback) {
         mFingerprintManager = fingerprintManager;
         mIcon = icon;
         mErrorTextView = errorTextView;
@@ -35,8 +35,7 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
     }
 
     public boolean isFingerprintAuthAvailable() {
-        // The line below prevents the false positive inspection from Android Studio
-        // noinspection ResourceType
+
         return mFingerprintManager.isHardwareDetected()
                 && mFingerprintManager.hasEnrolledFingerprints();
     }
@@ -47,11 +46,9 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
         }
         mCancellationSignal = new CancellationSignal();
         mSelfCancelled = false;
-        // The line below prevents the false positive inspection from Android Studio
-        // noinspection ResourceType
+
         mFingerprintManager
                 .authenticate(cryptoObject, mCancellationSignal, 0 /* flags */, this, null);
-        //mIcon.setImageResource(R.drawable.ic_fp_40px);
         mIcon.setImageResource(R.drawable.outline_fingerprint_24);
     }
 
@@ -64,13 +61,13 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
     }
 
     @Override
-    public void onAuthenticationError(int errMsgId, CharSequence errString) {
+    public void onAuthenticationError(final int errMsgId, CharSequence errString) {
         if (!mSelfCancelled) {
             showError(errString);
             mIcon.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    mCallback.onError();
+                    mCallback.onError(errMsgId);
                 }
             }, ERROR_TIMEOUT_MILLIS);
         }
@@ -119,7 +116,6 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
                     mErrorTextView.getResources().getColor(R.color.text_color_black, null));
             mErrorTextView.setText(
                     mErrorTextView.getResources().getString(R.string.fingerprint_hint));
-            //mIcon.setImageResource(R.drawable.ic_fp_40px);
             mIcon.setImageResource(R.drawable.outline_fingerprint_24);
         }
     };
@@ -128,6 +124,6 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
 
         void onAuthenticated();
 
-        void onError();
+        void onError(int errId);
     }
 }

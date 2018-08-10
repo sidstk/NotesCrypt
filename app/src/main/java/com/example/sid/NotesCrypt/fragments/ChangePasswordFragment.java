@@ -1,4 +1,4 @@
-package com.example.sid.NotesCrypt.fingerprint;
+package com.example.sid.NotesCrypt.fragments;
 
 
 import android.app.Activity;
@@ -11,7 +11,6 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.KeyProtection;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,7 +59,6 @@ public class ChangePasswordFragment extends DialogFragment {
     private EditText rePassword;
     private ProgressBar pg;
     private Context context;
-    private static final String PBE_ALGORITHM = "PBKDF2WithHmacSHA1";
     private static List<Note> notes = new ArrayList<>();
 
     public ChangePasswordFragment() {
@@ -139,7 +137,7 @@ public class ChangePasswordFragment extends DialogFragment {
                         notes.addAll(NoteListActivity.db.getAllNotes());
                         NoteListActivity.db.close();                  // before deleting database unreferenced all database connections
                         context.getApplicationContext().deleteDatabase("notes_db");
-                        new Engine(new WeakReference<Context>(context),
+                        new RevertData(new WeakReference<Context>(context),
                                 new WeakReference<ChangePasswordFragment>(this)).execute(rePassword.getText().toString());
                         //generateKey(rePassword.getText().toString());
                         //dismiss();
@@ -181,26 +179,21 @@ public class ChangePasswordFragment extends DialogFragment {
     }
 
 
-    private static final class Engine extends AsyncTask<String,Void,Void>{
+    private static final class RevertData extends AsyncTask<String,Void,Void>{
         private SecretKey secret;
-        private  final String AES_KEY = "secret_key";
-        private  final String AES_KEY_TEMP = "secret_key_temp";
-
-        private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
         private WeakReference<Context> contextWeakReference;
         private WeakReference<ChangePasswordFragment> changePasswordFragmentWeakReference;
-        private String pass;
 
-        Engine(WeakReference<Context> contextWeakReference,
-               WeakReference<ChangePasswordFragment> changePasswordFragmentWeakReference){
+        RevertData(WeakReference<Context> contextWeakReference,
+                   WeakReference<ChangePasswordFragment> changePasswordFragmentWeakReference){
             this.contextWeakReference = contextWeakReference;
             this.changePasswordFragmentWeakReference = changePasswordFragmentWeakReference;
         }
 
-        private PublicKey extractkey(Context context) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
+        private PublicKey extractkey() throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            return  keyStore.getCertificate(context.getString(R.string.privalias)).getPublicKey();
+            return  keyStore.getCertificate(CipherEngine.privalias).getPublicKey();
 
 
         }
@@ -214,7 +207,7 @@ public class ChangePasswordFragment extends DialogFragment {
             final SecureRandom secureRandom = new SecureRandom();
             secureRandom.nextBytes(salt);
 
-            final SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGORITHM);
+            final SecretKeyFactory factory = SecretKeyFactory.getInstance(CipherEngine.PBE_ALGORITHM);
             final PBEKeySpec keySpec = new PBEKeySpec(pass.toCharArray(), salt, iterationCount, 256);
 
             final SecretKey secretKey = factory.generateSecret(keySpec);
@@ -223,21 +216,23 @@ public class ChangePasswordFragment extends DialogFragment {
 
             secret = secretKey;
 
+            final Context context = contextWeakReference.get();
             SecretKey key = new SecretKeySpec(secretKey.getEncoded(), "AES");
-            final SharedPreferences shp = contextWeakReference.get().getSharedPreferences("dataa", Context.MODE_PRIVATE);
-            Cipher ecipher = Cipher.getInstance(RSA_ALGORITHM);
-            ecipher.init(Cipher.ENCRYPT_MODE,extractkey(contextWeakReference.get()));
+            final SharedPreferences shp = context.getApplicationContext().getSharedPreferences(context.getApplicationContext().getString(R.string.shred_preference),
+                    Context.MODE_PRIVATE);
+            Cipher ecipher = Cipher.getInstance(CipherEngine.RSA_ALGORITHM);
+            ecipher.init(Cipher.ENCRYPT_MODE,extractkey());
             shp.edit().putString("salt",Base64.encodeToString(ecipher.doFinal(salt), Base64.NO_WRAP)).apply();
 
 
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
 
-            if(keyStore.containsAlias(AES_KEY_TEMP))
-                keyStore.deleteEntry(AES_KEY_TEMP);
+            if(keyStore.containsAlias(CipherEngine.AES_KEY_TEMP))
+                keyStore.deleteEntry(CipherEngine.AES_KEY_TEMP);
 
             keyStore.setEntry(
-                    AES_KEY_TEMP,
+                    CipherEngine.AES_KEY_TEMP,
                     new KeyStore.SecretKeyEntry(key),
                     new KeyProtection.Builder(KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
@@ -252,15 +247,15 @@ public class ChangePasswordFragment extends DialogFragment {
             DatabaseHelper db = new DatabaseHelper(contextWeakReference.get().getApplicationContext());
 
 
-            for(int i=0; i<notes.size(); i++){
+            /*for(int i=0; i<notes.size(); i++){
                 Log.i("Enote", notes.get(i).getNote());
                 Log.i("Etitle", notes.get(i).getTitle());
-            }
+            }*/
 
             for(int i=0; i<notes.size(); i++){
 
-                long id = db.insertNote(CipherEngine.encryptWithKey(AES_KEY_TEMP, CipherEngine.decrypt(notes.get(i).getNote())),
-                        CipherEngine.encryptWithKey(AES_KEY_TEMP, CipherEngine.decrypt(notes.get(i).getTitle())),
+                long id = db.insertNote(CipherEngine.encryptWithKey(CipherEngine.AES_KEY_TEMP, CipherEngine.decrypt(notes.get(i).getNote())),
+                        CipherEngine.encryptWithKey(CipherEngine.AES_KEY_TEMP, CipherEngine.decrypt(notes.get(i).getTitle())),
                         notes.get(i).getTimestamp());
                 NoteListActivity.notesList.add(db.getNote(id));
 
@@ -288,24 +283,24 @@ public class ChangePasswordFragment extends DialogFragment {
             keyStore.load(null);
 
 
-            if(keyStore.containsAlias(AES_KEY_TEMP))
-                keyStore.deleteEntry(AES_KEY_TEMP);
+            if(keyStore.containsAlias(CipherEngine.AES_KEY_TEMP))
+                keyStore.deleteEntry(CipherEngine.AES_KEY_TEMP);
 
 
-            if(keyStore.containsAlias(AES_KEY))
-                keyStore.deleteEntry(AES_KEY);
+            if(keyStore.containsAlias(CipherEngine.AES_KEY))
+                keyStore.deleteEntry(CipherEngine.AES_KEY);
 
-            SecretKey key = new SecretKeySpec(secret.getEncoded(), "AES");
+            final SecretKey key = new SecretKeySpec(secret.getEncoded(), "AES");
 
             keyStore.setEntry(
-                    AES_KEY,
+                    CipherEngine.AES_KEY,
                     new KeyStore.SecretKeyEntry(key),
                     new KeyProtection.Builder(KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                             .setRandomizedEncryptionRequired(false)
                             .build());
-
+            secret = null;
         }
 
         @Override

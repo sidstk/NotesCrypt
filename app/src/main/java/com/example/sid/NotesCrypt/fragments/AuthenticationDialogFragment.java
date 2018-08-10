@@ -1,4 +1,4 @@
-package com.example.sid.NotesCrypt.fingerprint;
+package com.example.sid.NotesCrypt.fragments;
 
 import android.app.Activity;
 import android.app.DialogFragment;
@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.sid.NotesCrypt.fingerprint.FingerprintUiHelper;
 import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.activity.NoteActivity;
@@ -42,7 +43,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-import static com.example.sid.NotesCrypt.activity.MainActivity.DEFAULT_KEY_NAME;
 
 /**
  * A dialog which uses fingerprint APIs to authenticate the user, and falls back to password
@@ -88,7 +88,7 @@ public class AuthenticationDialogFragment extends DialogFragment
         getDialog().setTitle(getString(R.string.sign_in));
         authenticated = false;
         View v = inflater.inflate(R.layout.fingerprint_dialog_container, container, false);
-        mCancelButton = (Button) v.findViewById(R.id.cancel_button);
+        mCancelButton = v.findViewById(R.id.cancel_button);
         mCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -97,7 +97,7 @@ public class AuthenticationDialogFragment extends DialogFragment
             }
         });
 
-        mSecondDialogButton = (Button) v.findViewById(R.id.second_dialog_button);
+        mSecondDialogButton =  v.findViewById(R.id.second_dialog_button);
         mSecondDialogButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -135,13 +135,11 @@ public class AuthenticationDialogFragment extends DialogFragment
         });
         mFingerprintContent = v.findViewById(R.id.fingerprint_container);
         mBackupContent = v.findViewById(R.id.backup_container);
-        mPassword = (EditText) v.findViewById(R.id.oldpassword);
+        mPassword =  v.findViewById(R.id.oldpassword);
         mPassword.setOnEditorActionListener(this);
-        mPasswordDescriptionTextView = (TextView) v.findViewById(R.id.password_description);
-        mUseFingerprintFutureCheckBox = (CheckBox)
-                v.findViewById(R.id.use_fingerprint_in_future_check);
-        mNewFingerprintEnrolledTextView = (TextView)
-                v.findViewById(R.id.new_fingerprint_enrolled_description);
+        mPasswordDescriptionTextView =  v.findViewById(R.id.password_description);
+        mUseFingerprintFutureCheckBox = v.findViewById(R.id.use_fingerprint_in_future_check);
+        mNewFingerprintEnrolledTextView = v.findViewById(R.id.new_fingerprint_enrolled_description);
 
 
 
@@ -154,7 +152,7 @@ public class AuthenticationDialogFragment extends DialogFragment
         // If fingerprint authentication is not available, switch immediately to the backup
         // (password) screen.
         if (!mFingerprintUiHelper.isFingerprintAuthAvailable()) {
-            Log.i("info","calling backup");
+            //Log.i("info","calling backup");
             goToBackup();
         }
         return v;
@@ -186,7 +184,7 @@ public class AuthenticationDialogFragment extends DialogFragment
     @Override
     public void onPause() {
         super.onPause();
-        Log.i("info","onpause");
+        //Log.i("info","onpause");
         mFingerprintUiHelper.stopListening();
     }
 
@@ -196,9 +194,10 @@ public class AuthenticationDialogFragment extends DialogFragment
 
         activity = new WeakReference<>(getActivity());
         contextWeakReference = new WeakReference<>(context);
-        //mInputMethodManager = context.getSystemService(InputMethodManager.class);
         mInputMethodManager = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
-        mSharedPreferences = context.getApplicationContext().getSharedPreferences("dataa", Context.MODE_PRIVATE);
+        mSharedPreferences = context.getApplicationContext().
+                getSharedPreferences(context.getApplicationContext().getString(R.string.shred_preference),
+                Context.MODE_PRIVATE);
     }
 
     /**
@@ -225,30 +224,29 @@ public class AuthenticationDialogFragment extends DialogFragment
         mFingerprintUiHelper.stopListening();
     }
 
-    /**
-     * Checks whether the current entered password is correct, and dismisses the the dialog and
-     * let's the activity know about the result.
-     */
+
     private void verifyPassword() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchPaddingException, BadPaddingException, UnrecoverableKeyException, KeyStoreException, InvalidKeyException, IllegalBlockSizeException, CertificateException, IOException, InvalidAlgorithmParameterException {
 
         if(!TextUtils.isEmpty(mPassword.getText())){
             if (!CipherEngine.check_password(mPassword.getText().toString(), contextWeakReference)) {
 
-                Log.i("pwd","password false");
+                //Log.i("pwd","password false");
                 mPassword.setText("");
                 mPassword.setError("wrong credential");
                 return;
             }
 
             if (mStage == Stage.NEW_FINGERPRINT_ENROLLED) {
+                Context context = contextWeakReference.get();
                 SharedPreferences.Editor editor = mSharedPreferences.edit();
-                editor.putBoolean("use_fingerprint_future", mUseFingerprintFutureCheckBox.isChecked());
+                editor.putBoolean(context.getApplicationContext().getString(R.string.use_fingerprint_future), mUseFingerprintFutureCheckBox.isChecked());
 
                 editor.apply();
 
                 if (mUseFingerprintFutureCheckBox.isChecked()) {
                     // Re-create the key so that fingerprints including new ones are validated.
-                    AuthenticationHelper.createKey(NoteListActivity.DEFAULT_KEY_NAME, true,true);
+                    AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,
+                            true,true);
                     mStage = Stage.FINGERPRINT;
                 }
             }
@@ -262,10 +260,6 @@ public class AuthenticationDialogFragment extends DialogFragment
         }
 
     }
-
-    /**
-     * @return true if {@code password} is correct, false otherwise
-     */
 
 
     private final Runnable mShowKeyboardRunnable = new Runnable() {
@@ -347,37 +341,37 @@ public class AuthenticationDialogFragment extends DialogFragment
 
             NoteListActivity noteList = (NoteListActivity) context;
 
-            if(mCause == "edit")
+            if(mCause.equals(context.getApplicationContext().getString(R.string.edit)))
                 noteList.startNoteActivity(NoteListActivity.notesList.get(listPosition).getId(),listPosition);
 
-            else if(mCause == "delete")
+            else if(mCause.equals(context.getApplicationContext().getString(R.string.delete)))
                 NoteListActivity.deleteNote(listPosition);
         }
 
         else if(context instanceof NoteActivity){
             NoteActivity noteActivity = (NoteActivity) context;
 
-            if(mCause == "save"){
-                Log.i("info","save");
+            if(mCause.equals(context.getApplicationContext().getString(R.string.save))){
+
                 noteActivity.save();
             }
-            else if(mCause == "delete"){
+            else if(mCause.equals(context.getApplicationContext().getString(R.string.delete))){
                 noteActivity.delete();
             }
-            else if(mCause == "update"){
+            else if(mCause.equals(context.getApplicationContext().getString(R.string.update))){
                 noteActivity.update();
             }
         }
 
         else if(context instanceof SettingsActivity){
-            if(mCause == "fp_true"){
-                Log.i("info","fp_true");
+            if(mCause.equals(contextWeakReference.get().getApplicationContext().getString(R.string.fp_true))){
+                //Log.i("info","fp_true");
                 mSharedPreferences.edit().putBoolean(getString(R.string.use_fingerprint_future), true).apply();
-                AuthenticationHelper.createKey(DEFAULT_KEY_NAME, true, true);
+                AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME, true, true);
             }
 
-            else if(mCause == "fp_false"){
-                Log.i("info","fp_false");
+            else if(mCause.equals(contextWeakReference.get().getApplicationContext().getString(R.string.fp_false))){
+                //Log.i("info","fp_false");
                 mSharedPreferences.edit().putBoolean(getString(R.string.use_fingerprint_future), false).apply();
             }
         }
@@ -388,15 +382,14 @@ public class AuthenticationDialogFragment extends DialogFragment
 
     @Override
     public void onDismiss(DialogInterface dialog) {
-        Log.i("info","ondismiss");
 
         if(!authenticated){
             Context context = contextWeakReference.get();
             if(context instanceof SettingsActivity){
                 SettingsActivity settingsActivity = (SettingsActivity) context;
-                if(mCause == "fp_true")
+                if(mCause.equals(contextWeakReference.get().getApplicationContext().getString(R.string.fp_true)))
                     settingsActivity.aSwitch.setChecked(false);
-                if(mCause == "fp_false")
+                if(mCause.equals(contextWeakReference.get().getApplicationContext().getString(R.string.fp_false)))
                     settingsActivity.aSwitch.setChecked(true);
             }
 
@@ -405,8 +398,10 @@ public class AuthenticationDialogFragment extends DialogFragment
         super.onDismiss(dialog);
     }
 
+
     @Override
-    public void onError() {
+    public void onError(final int errId) {
+
         goToBackup();
     }
 
