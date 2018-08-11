@@ -11,7 +11,7 @@ NotesCrypt is a simple secure application that uses Android Key Store API and Fi
 * Stores data in sqlite database
 
 ## Screenshots ##
-[Screenshots](https://github.com/sidstk/NotesCrypt/screens.md)
+[Screenshots](screens.md)
 
 ## Getting Started ##
 This sample uses the Gradle build system. To build this project, use the "gradlew build" command or use "Import Project" in Android Studio.
