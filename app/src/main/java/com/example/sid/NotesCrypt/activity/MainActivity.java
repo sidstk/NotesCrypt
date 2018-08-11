@@ -717,7 +717,7 @@ public class MainActivity extends AppCompatActivity{
                             else{
                                 if (!hasEnrolledFingerprints()) {
                                     new MaterialDialog.Builder(MainActivity.this)
-                                            .title("Fingerprints data not found!!")
+                                            .title("Fingerprint data not found!!")
                                             .content("Please enroll atleast one fingerprint")
                                             .positiveText("Settings")
                                             .negativeText("Exit")

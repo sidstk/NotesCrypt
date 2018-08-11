@@ -223,10 +223,6 @@ public class NoteActivity extends AppCompatActivity {
 
 
 
-
-
-
-
     private void deleteNote(int id,int position) {
 
        if(position!=-1){
