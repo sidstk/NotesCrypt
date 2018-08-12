@@ -1,6 +1,7 @@
 package com.example.sid.NotesCrypt.activity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.fragments.ChangePasswordFragment;
 
+
 public class SettingsActivity extends AppCompatActivity {
 
     public  Switch aSwitch;
@@ -23,7 +25,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            // Show the Up button in the action bar.
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeButtonEnabled(true);
         }
@@ -67,6 +68,13 @@ public class SettingsActivity extends AppCompatActivity {
                 changePasswordFragment.setCancelable(false);
                 changePasswordFragment.show(SettingsActivity.this.getFragmentManager(), changePasswordFragment.getTag());
 
+            }
+        });
+
+        findViewById(R.id.about).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(SettingsActivity.this,About.class));
             }
         });
     }

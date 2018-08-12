@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.R;
@@ -62,13 +63,9 @@ public class NoteActivity extends AppCompatActivity {
     private int id;
     private int position;
     private Menu menu;
-    private boolean titleChange;
-    private boolean noteChnage;
     private Cipher mCipher;
     private boolean saved = false;
     private boolean use_fingerprint;
-    private SharedPreferences mSharedPreferences;
-
 
 
     private static class SaveData extends AsyncTask<String,Void,Void>{
@@ -76,10 +73,13 @@ public class NoteActivity extends AppCompatActivity {
         private ProgressDialog progress;
         private DatabaseHelper db;
         private WeakReference<Context> contextWeakReference;
+        private WeakReference<NoteActivity> noteListActivityWeakReference;
+
 
         SaveData(WeakReference<Context> contextWeakReference){
             this.contextWeakReference = contextWeakReference;
             db = new DatabaseHelper(this.contextWeakReference.get().getApplicationContext());
+            noteListActivityWeakReference = new WeakReference<>((NoteActivity) contextWeakReference.get());
 
         }
 
@@ -89,37 +89,14 @@ public class NoteActivity extends AppCompatActivity {
                     long id = 0;
                     try {
                         id = db.insertNote(CipherEngine.encrypt(note), CipherEngine.encrypt(title),null);
-                    } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    } catch (InvalidKeySpecException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchPaddingException e) {
-                        e.printStackTrace();
-                    } catch (InvalidAlgorithmParameterException e) {
-                        e.printStackTrace();
-                    } catch (InvalidKeyException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (BadPaddingException e) {
-                        e.printStackTrace();
-                    } catch (IllegalBlockSizeException e) {
-                        e.printStackTrace();
-                    } catch (CertificateException e) {
-                        e.printStackTrace();
-                    } catch (UnrecoverableKeyException e) {
-                        e.printStackTrace();
-                    } catch (KeyStoreException e) {
-                        e.printStackTrace();
-                    } catch (InvalidParameterSpecException e) {
+                    }
+                    catch (InvalidKeyException | InvalidAlgorithmParameterException | KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | InvalidParameterSpecException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | IOException e) {
                         e.printStackTrace();
                     }
 
             // get the newly inserted note from db
                     final Note n = db.getNote(id);
-                    Context context = contextWeakReference.get();
-                    Activity activity = (Activity) context;
-                    activity.runOnUiThread(new Runnable() {
+            ((Activity)contextWeakReference.get()).runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
 
@@ -130,48 +107,29 @@ public class NoteActivity extends AppCompatActivity {
                                 // refreshing the list
                                 mAdapter.notifyDataSetChanged();
                             }
-
+                            noteListActivityWeakReference.get().position = 0;
                             NoteListActivity.toggleEmptyNotes();
 
                         }
                     });
 
         }
-
-        private void updateNote(String note, String title, final int position) {
+        private void updateNote(final String note, final String title, final int position) {
             Note n = notesList.get(position);
-            // updating note text
 
-
-            try {
+            try{
                 n.setNote(CipherEngine.encrypt(note));
-                n.setTitle(CipherEngine.encrypt(title));
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (InvalidKeySpecException e) {
-                e.printStackTrace();
-            } catch (NoSuchPaddingException e) {
-                e.printStackTrace();
-            } catch (InvalidAlgorithmParameterException e) {
-                e.printStackTrace();
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (BadPaddingException e) {
-                e.printStackTrace();
-            } catch (IllegalBlockSizeException e) {
-                e.printStackTrace();
-            } catch (CertificateException e) {
-                e.printStackTrace();
-            } catch (UnrecoverableKeyException e) {
-                e.printStackTrace();
-            } catch (KeyStoreException e) {
-                e.printStackTrace();
-            } catch (InvalidParameterSpecException e) {
+
+            } catch (InvalidKeyException | InvalidAlgorithmParameterException | KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | InvalidParameterSpecException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | IOException e) {
                 e.printStackTrace();
             }
 
+            try{
+                n.setTitle(CipherEngine.encrypt(title));
+            }
+            catch (InvalidKeyException | InvalidAlgorithmParameterException | KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | InvalidParameterSpecException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | IOException e) {
+                e.printStackTrace();
+            }
             // updating note in db
             db.updateNote(n);
 
@@ -214,16 +172,15 @@ public class NoteActivity extends AppCompatActivity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             db.close();
+            noteListActivityWeakReference.get().saved = true;
             progress.dismiss();
-            NoteActivity noteActivity = (NoteActivity) contextWeakReference.get();
-            noteActivity.saved = true;
             Toast.makeText(contextWeakReference.get(), "Note saved", Toast.LENGTH_SHORT).show();
         }
     }
 
 
 
-    private void deleteNote(int id,int position) {
+    private void deleteNote(int position) {
 
        if(position!=-1){
            NoteListActivity.deleteNote(position);
@@ -325,9 +282,7 @@ public class NoteActivity extends AppCompatActivity {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
 
-                                        //createNote(noteText.getText().toString(),noteTitle.getText().toString());
-                                        //new SaveData().execute("addNote",noteText.getText().toString(),noteTitle.getText().toString());
-                                        //finish();
+
                                         if(use_fingerprint){
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
                                                     ah.listener(mCipher,CipherEngine.DEFAULT_KEY_NAME,
@@ -362,9 +317,7 @@ public class NoteActivity extends AppCompatActivity {
                                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        //updateNote(noteText.getText().toString(),noteTitle.getText().toString(),position);
-                                        //finish();
-                                        //new SaveData().execute("updateNote",noteText.getText().toString(),noteTitle.getText().toString(),String.valueOf(position));
+
                                         if(use_fingerprint){
                                                     AuthenticationHelper ah = new AuthenticationHelper(NoteActivity.this);
                                                     ah.listener(mCipher, CipherEngine.DEFAULT_KEY_NAME,
@@ -397,7 +350,6 @@ public class NoteActivity extends AppCompatActivity {
             case android.R.id.home:
                 if( !saved ) {
                     new AlertDialog.Builder(NoteActivity.this)
-                            .setTitle("Leave current activity")
                             .setMessage("All unsaved data will be lost")
                             .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
                                 @Override
@@ -440,7 +392,7 @@ public class NoteActivity extends AppCompatActivity {
 
 
     public void delete(){
-    deleteNote(id,position);
+    deleteNote(position);
     finish();
     }
 
@@ -456,32 +408,16 @@ public class NoteActivity extends AppCompatActivity {
     try {
         result = CipherEngine.decrypt(text);
     } catch(AEADBadTagException e){
-        Toast.makeText(this, "It looks like your message has been changed outside scope", Toast.LENGTH_SHORT).show();
+        new MaterialDialog.Builder(this)
+                .title("Warning")
+                .iconRes(R.drawable.round_warning_24)
+                .content("Looks like empty field(s) has been modified outside app's scope. Make sure that no 3rd party app has root access.")
+                .show();
     }
-    catch (NoSuchAlgorithmException e) {
-        e.printStackTrace();
-    } catch (InvalidKeySpecException e) {
-        e.printStackTrace();
-    } catch (NoSuchPaddingException e) {
-        e.printStackTrace();
-    } catch (InvalidKeyException e) {
-        e.printStackTrace();
-    } catch (InvalidAlgorithmParameterException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
-    } catch (BadPaddingException e) {
-        e.printStackTrace();
-    } catch (IllegalBlockSizeException e) {
-        e.printStackTrace();
-    } catch (KeyStoreException e) {
-        e.printStackTrace();
-    } catch (CertificateException e) {
-        e.printStackTrace();
-    } catch (UnrecoverableKeyException e) {
+    catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | NoSuchPaddingException | InvalidAlgorithmParameterException | IOException | IllegalBlockSizeException | BadPaddingException | KeyStoreException | UnrecoverableKeyException | CertificateException e) {
         e.printStackTrace();
     }
-    return result;
+        return result;
     }
 
 
@@ -492,17 +428,14 @@ public class NoteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_note);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            // Show the Up button in the action bar.
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeButtonEnabled(true);
         }
-        mSharedPreferences = getApplicationContext().getSharedPreferences(getApplicationContext().getString(R.string.shred_preference),
+        SharedPreferences mSharedPreferences = getApplicationContext().getSharedPreferences(getApplicationContext().getString(R.string.shred_preference),
                 Context.MODE_PRIVATE);
 
         noteTitle = findViewById(R.id.noteTitle);
         noteText = findViewById(R.id.noteText);
-        titleChange = false;
-        noteChnage = false;
         saved = true;
         use_fingerprint = mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.fingerprint),true) &&
                 mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.use_fingerprint_future),true);
@@ -514,18 +447,14 @@ public class NoteActivity extends AppCompatActivity {
             mCipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
                     + KeyProperties.BLOCK_MODE_CBC + "/"
                     + KeyProperties.ENCRYPTION_PADDING_PKCS7);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();
         }
-
 
 
         Intent it = getIntent();
         id = it.getIntExtra("id",0);
         position = it.getIntExtra("position",-1);
-        Note note = new Note();
 
         if(id==0){
             Date c = Calendar.getInstance().getTime();
@@ -536,7 +465,7 @@ public class NoteActivity extends AppCompatActivity {
 
         else{
             DatabaseHelper db = new DatabaseHelper(this);
-            note = db.getNote(id);
+            Note note = db.getNote(id);
             noteTitle.setText(getData(note.getTitle()));
 
             noteText.setText(getData(note.getNote()));
@@ -584,7 +513,6 @@ public class NoteActivity extends AppCompatActivity {
 
                 if( !saved ) {
                     new AlertDialog.Builder(NoteActivity.this)
-                            .setTitle("Leave current activity")
                             .setMessage("All unsaved data will be lost")
                             .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
                                 @Override

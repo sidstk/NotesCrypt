@@ -5,11 +5,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
 import android.security.keystore.KeyProperties;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -22,8 +20,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
@@ -34,31 +30,19 @@ import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.utils.MyDividerItemDecoration;
 import com.example.sid.NotesCrypt.utils.RecyclerTouchListener;
 import com.example.sid.NotesCrypt.view.NotesAdapter;
-
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 
 public class NoteListActivity extends AppCompatActivity {
     public  static NotesAdapter mAdapter;
     public static List<Note> notesList = new ArrayList<>();
-    private CoordinatorLayout coordinatorLayout;
-    private RecyclerView recyclerView;
     private static TextView noNotesView;
 
     public  static DatabaseHelper db;
-
-    private static final String TAG = MainActivity.class.getSimpleName();
-
-
-    private static final String SECRET_MESSAGE = "Very secret message";
-
 
     private SharedPreferences mSharedPreferences;
     private Cipher mCipher;
@@ -87,8 +71,8 @@ public class NoteListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notelist);
-        coordinatorLayout = findViewById(R.id.coordinator_layout);
-        recyclerView = findViewById(R.id.recycler_view);
+        CoordinatorLayout coordinatorLayout = findViewById(R.id.coordinator_layout);
+        RecyclerView recyclerView = findViewById(R.id.recycler_view);
         noNotesView = findViewById(R.id.empty_notes_view);
 
 
@@ -98,7 +82,7 @@ public class NoteListActivity extends AppCompatActivity {
         notesList.addAll(db.getAllNotes());
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -134,52 +118,6 @@ public class NoteListActivity extends AppCompatActivity {
 
     }
 
-/**
- * Tries to encrypt some data with the generated key in { AuthenticationHelper.createKey} which is
- * only works if the user has just authenticated via fingerprint.
- */
-
-
-
-
-    private void tryEncrypt(Cipher cipher) {
-        try {
-            byte[] encrypted = cipher.doFinal(SECRET_MESSAGE.getBytes());
-            showConfirmation(encrypted);
-        } catch (BadPaddingException | IllegalBlockSizeException e) {
-            Toast.makeText(this, "Failed to encrypt the data with the generated key. "
-                    + "Retry the purchase", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "Failed to encrypt the data with the generated key." + e.getMessage());
-        }
-    }
-
-    /**
-     * Proceed the purchase operation
-     *
-     * @param withFingerprint {@code true} if the purchase was made by using a fingerprint
-     * @param cryptoObject the Crypto object
-     */
-    public void onPurchased(boolean withFingerprint,
-                            @Nullable FingerprintManager.CryptoObject cryptoObject) {
-        if (withFingerprint) {
-            // If the user has authenticated with fingerprint, verify that using cryptography and
-            // then show the confirmation message.
-            assert cryptoObject != null;
-            tryEncrypt(cryptoObject.getCipher());
-        } else {
-            // Authentication happened with backup password. Just show the confirmation message.
-            showConfirmation(null);
-        }
-    }
-
-    // Show confirmation, if fingerprint was used show crypto information.
-    private void showConfirmation(byte[] encrypted) {
-
-    }
-
-
-
-
     /**
      * Deleting note from SQLite and removing the
      * item from the list by its position
@@ -206,15 +144,13 @@ public class NoteListActivity extends AppCompatActivity {
         final boolean use_fingerprint = mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.fingerprint),true) &&
                 mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.use_fingerprint_future),true);
         if(use_fingerprint) {
-            AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,true, use_fingerprint);
+            AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,true, true);
 
             try {
                 mCipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
                         + KeyProperties.BLOCK_MODE_CBC + "/"
                         + KeyProperties.ENCRYPTION_PADDING_PKCS7);
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (NoSuchPaddingException e) {
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
                 e.printStackTrace();
             }
         }
