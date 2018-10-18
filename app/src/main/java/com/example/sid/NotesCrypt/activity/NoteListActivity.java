@@ -1,16 +1,17 @@
 package com.example.sid.NotesCrypt.activity;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.security.keystore.KeyProperties;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,9 +20,16 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.example.sid.NotesCrypt.App;
 import com.example.sid.NotesCrypt.utils.AuthenticationHelper;
 import com.example.sid.NotesCrypt.R;
 import com.example.sid.NotesCrypt.database.DatabaseHelper;
@@ -29,30 +37,140 @@ import com.example.sid.NotesCrypt.database.model.Note;
 import com.example.sid.NotesCrypt.utils.CipherEngine;
 import com.example.sid.NotesCrypt.utils.MyDividerItemDecoration;
 import com.example.sid.NotesCrypt.utils.RecyclerTouchListener;
+import com.example.sid.NotesCrypt.utils.SessionListener;
 import com.example.sid.NotesCrypt.view.NotesAdapter;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 
 
-public class NoteListActivity extends AppCompatActivity {
+public class NoteListActivity extends AppCompatActivity implements SessionListener {
     public  static NotesAdapter mAdapter;
     public static List<Note> notesList = new ArrayList<>();
     private static TextView noNotesView;
-
+    private FloatingActionButton fab;
     public  static DatabaseHelper db;
 
     private SharedPreferences mSharedPreferences;
     private Cipher mCipher;
+    public static boolean foregroundSessionTimeout;
+    private boolean backgroundSessionTimeout;
+    private App app;
+    private boolean isMultiSelect = false;
+    private HashMap< Note, View> selectedIds = new HashMap< Note, View>();
+    private ActionMode actionModev;
+    private TextView countTextView;
+    private RecyclerView recyclerView;
 
+    private ActionMode.Callback mActionModeCallback= new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(final ActionMode actionMode, Menu menu) {
+            MenuInflater inflater = actionMode.getMenuInflater();
+            inflater.inflate(R.menu.menu_select, menu);
+            isMultiSelect = true;
+            final MenuItem menuItem = menu.findItem(R.id.spinner);
+            final LinearLayout linearLayout = (LinearLayout) menuItem.getActionView();
+            countTextView = linearLayout.findViewById(R.id.count);
+            linearLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    final PopupMenu popupMenu  = new PopupMenu(NoteListActivity.this,linearLayout);
+                    popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+
+                    if(notesList.size() == 1 || notesList.size() == selectedIds.size())
+                    popupMenu.getMenu().findItem(R.id.selall).setEnabled(false);
+
+                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem menuItem) {
+                            switch(menuItem.getItemId()) {
+                                case R.id.selall:
+                                    View child;
+                                    for(int i=0; i<recyclerView.getChildCount(); i++){
+                                        child = recyclerView.getChildAt(i);
+                                        child.setForeground(new ColorDrawable(ContextCompat.getColor(NoteListActivity.this, R.color.colorControlActivated)));
+                                        Note note = notesList.get(i);
+                                        if(!selectedIds.containsKey(note))
+                                        selectedIds.put(note, child);
+                                    }
+                                    countTextView.setText(String.valueOf(recyclerView.getChildCount()));
+                                    popupMenu.getMenu().findItem(R.id.selall).setEnabled(false);
+                                    return true;
+
+                                case R.id.desall:
+                                    actionMode.finish();
+                                    return true;
+
+                                default:
+                                    return false;
+
+                            }
+                        }
+                    });
+                    popupMenu.show();
+                }
+            });
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+            switch (menuItem.getItemId()){
+                case R.id.action_delete:
+                    Set set = selectedIds.entrySet();
+                    for (Object aSet : set) {
+                        Map.Entry m = (Map.Entry) aSet;
+                        ((View) m.getValue()).setForeground(new ColorDrawable(ContextCompat.getColor(NoteListActivity.this, android.R.color.transparent)));
+                        Note note = (Note) m.getKey();
+                        int index = notesList.indexOf(note);
+                        db.deleteNote(note);
+
+                        notesList.remove(index);
+                        mAdapter.notifyItemRemoved(index);
+
+                        toggleEmptyNotes();
+
+                    }
+                    selectedIds.clear();
+                    actionMode.finish();
+                    return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode actionMode) {
+            isMultiSelect = false;
+            actionModev = null;
+            Set set = selectedIds.entrySet();
+            for (Object aSet : set) {
+                Map.Entry m = (Map.Entry) aSet;
+                ((View) m.getValue()).setForeground(new ColorDrawable(ContextCompat.getColor(NoteListActivity.this, android.R.color.transparent)));
+            }
+
+            selectedIds = null;
+            fab.setVisibility(View.VISIBLE);
+        }
+    };
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.menu_settings,menu);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -72,17 +190,22 @@ public class NoteListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notelist);
         CoordinatorLayout coordinatorLayout = findViewById(R.id.coordinator_layout);
-        RecyclerView recyclerView = findViewById(R.id.recycler_view);
-        noNotesView = findViewById(R.id.empty_notes_view);
+        recyclerView = findViewById(R.id.recycler_view);
+        app = new App();
+        app.registerListener(this);
+        app.startForegorundSession();
 
+        foregroundSessionTimeout = false;
+        backgroundSessionTimeout = false;
+
+        noNotesView = findViewById(R.id.empty_notes_view);
 
 
         db = new DatabaseHelper(getApplicationContext());
 
         notesList.addAll(db.getAllNotes());
 
-
-        FloatingActionButton fab = findViewById(R.id.fab);
+        fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -104,9 +227,27 @@ public class NoteListActivity extends AppCompatActivity {
 
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(this,
                 recyclerView, new RecyclerTouchListener.ClickListener() {
+
             @Override
             public void onClick(View view, final int position) {
-                showActionsDialog(position);
+                if(isMultiSelect) multiSelect(view, position);
+
+                else showActionsDialog(position);
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+
+                if (!isMultiSelect){
+                    selectedIds = new HashMap<Note ,View>();
+
+                    if (actionModev == null){
+                        actionModev = startSupportActionMode(mActionModeCallback); //show ActionMode.
+                    }
+                    multiSelect(view, position);
+                }
+
+
             }
 
         }));
@@ -118,6 +259,40 @@ public class NoteListActivity extends AppCompatActivity {
 
     }
 
+    private void multiSelect(View view, int position) {
+        fab.setVisibility(View.GONE);
+        Note note = notesList.get(position);
+        if (note != null){
+            if (actionModev != null) {
+                if (selectedIds.containsKey(note)){
+                    selectedIds.remove(note);
+                    view.setForeground(new ColorDrawable(ContextCompat.getColor(NoteListActivity.this,android.R.color.transparent)));
+
+                }
+
+
+                else{
+                    selectedIds.put(note, view);
+                    view.setForeground(new ColorDrawable(ContextCompat.getColor(NoteListActivity.this, R.color.colorControlActivated)));
+
+                }
+
+                if (selectedIds.size() > 0)
+                    countTextView.setText(String.valueOf(selectedIds.size()));
+                    //actionModev.setTitle(String.valueOf(selectedIds.size()) + " selected"); //show selected item count on action mode.
+                else{
+                    countTextView.setText("0");
+                    //actionModev.setTitle(""); //remove item count from action mode.
+                    actionModev.finish(); //hide action mode.
+                }
+
+            }
+        }
+    }
+
+    private boolean checkInactivity(){
+        return foregroundSessionTimeout;
+    }
     /**
      * Deleting note from SQLite and removing the
      * item from the list by its position
@@ -133,17 +308,26 @@ public class NoteListActivity extends AppCompatActivity {
         toggleEmptyNotes();
     }
 
+    @Override
+    public void onUserInteraction() {
+        super.onUserInteraction();
+        app.startForegorundSession();
+
+    }
+
     /**
      * Opens dialog with Edit - Delete options
      * Edit - 0
      * Delete - 0
      */
+
     private void showActionsDialog(final int position) {
         CharSequence colors[] = new CharSequence[]{"Edit", "Delete"};
 
         final boolean use_fingerprint = mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.fingerprint),true) &&
                 mSharedPreferences.getBoolean(getApplicationContext().getString(R.string.use_fingerprint_future),true);
         if(use_fingerprint) {
+
             AuthenticationHelper.createKey(CipherEngine.DEFAULT_KEY_NAME,true, true);
 
             try {
@@ -155,44 +339,25 @@ public class NoteListActivity extends AppCompatActivity {
             }
         }
 
+        if(checkInactivity()){
+            //require password
+            if(use_fingerprint){
+                AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
+                ah.listener(mCipher,CipherEngine.DEFAULT_KEY_NAME,
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Choose option");
-        builder.setItems(colors, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == 0) {
-
-                    if(use_fingerprint){
-                        AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(mCipher,CipherEngine.DEFAULT_KEY_NAME,
-                                getApplicationContext().getString(R.string.edit),
-                                position);
-                    }
-
-                    else{
-                        AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(getApplicationContext().getString(R.string.edit), position);      // only password based authentication
-                    }
-
-
-                }
-                else {
-
-                    if(use_fingerprint) {
-                        AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(mCipher, CipherEngine.DEFAULT_KEY_NAME,
-                                getApplicationContext().getString(R.string.delete),
-                                position);
-                    }
-                    else{
-                        AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
-                        ah.listener(getApplicationContext().getString(R.string.delete), position);
-                    }
-                }
+                        getApplicationContext().getString(R.string.edit),
+                        position);
             }
-        });
-        builder.show();
+
+            else{
+                AuthenticationHelper ah = new AuthenticationHelper(NoteListActivity.this);
+                ah.listener(getApplicationContext().getString(R.string.edit), position);      // only password based authentication
+            }
+        }
+        else{
+            startNoteActivity(notesList.get(position).getId(), position);
+        }
+
     }
 
 
@@ -218,9 +383,34 @@ public class NoteListActivity extends AppCompatActivity {
         }
     }
 
+
+
+
     @Override
     protected void onResume() {
         super.onResume();
+
+        app.cancelBackgroundSession();
+        if(backgroundSessionTimeout)
+            foregroundSessionTimeout = true;
+
+        //if ( foregroundSessionTimeout ) foregroundSessionTimeout = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //app.cancelForegroundSession();
+        backgroundSessionTimeout = false;
+        app.startBackgroundSession();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        app.cancelBackgroundSession();
+        app.cancelForegroundSession();
     }
 
     @Override
@@ -249,6 +439,16 @@ public class NoteListActivity extends AppCompatActivity {
 
     }
 
+
+    @Override
+    public void foregroundSessionExpired() {
+        foregroundSessionTimeout = true;
+    }
+
+    @Override
+    public void backgroundSessionExpired() {
+        backgroundSessionTimeout = true;
+    }
 
 
 }

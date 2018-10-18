@@ -17,4 +17,6 @@
 
     <color name="error_registration">#e10913</color>
     <color name="white">#ffffff</color>
+    <color name="colorControlActivated">#50FF4081</color>
+
 </resources>

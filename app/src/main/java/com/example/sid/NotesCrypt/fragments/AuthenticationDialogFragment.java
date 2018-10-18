@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -340,7 +339,7 @@ public class AuthenticationDialogFragment extends DialogFragment
         if(context instanceof NoteListActivity){
 
             NoteListActivity noteList = (NoteListActivity) context;
-
+            NoteListActivity.foregroundSessionTimeout = false;
             if(mCause.equals(context.getApplicationContext().getString(R.string.edit)))
                 noteList.startNoteActivity(NoteListActivity.notesList.get(listPosition).getId(),listPosition);
 
