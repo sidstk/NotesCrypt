@@ -48,4 +48,4 @@ This sample uses the Gradle build system. To build this project, use the "gradle
 * https://github.com/afollestad/material-dialogs
 
 ## Support ##
-If you've found an error in this sample, please file an issue: https://github.com/sidstk/NotesCrypt
+If you've found an error in this repo, please file an issue: https://github.com/sidstk/NotesCrypt
