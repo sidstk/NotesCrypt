@@ -1,15 +1,18 @@
 package com.example.sid.NotesCrypt.activity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.security.keystore.KeyProperties;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -83,7 +86,7 @@ public class NoteListActivity extends AppCompatActivity implements SessionListen
                     final PopupMenu popupMenu  = new PopupMenu(NoteListActivity.this,linearLayout);
                     popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
 
-                    if(notesList.size() == 1 || notesList.size() == selectedIds.size())
+                    if(notesList.size() == selectedIds.size())
                     popupMenu.getMenu().findItem(R.id.selall).setEnabled(false);
 
                     popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -125,26 +128,55 @@ public class NoteListActivity extends AppCompatActivity implements SessionListen
             return false;
         }
 
+        private void delete() {
+            Set set = selectedIds.entrySet();
+            for (Object aSet : set) {
+                Map.Entry m = (Map.Entry) aSet;
+                ((View) m.getValue()).setForeground(new ColorDrawable(ContextCompat.getColor(NoteListActivity.this, android.R.color.transparent)));
+                Note note = (Note) m.getKey();
+                int index = notesList.indexOf(note);
+                db.deleteNote(note);
+
+                notesList.remove(index);
+                mAdapter.notifyItemRemoved(index);
+
+            }
+
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    toggleEmptyNotes();
+                }
+            },200);
+
+            selectedIds.clear();
+        }
+
         @Override
-        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+        public boolean onActionItemClicked(final ActionMode actionMode, MenuItem menuItem) {
             switch (menuItem.getItemId()){
+
                 case R.id.action_delete:
-                    Set set = selectedIds.entrySet();
-                    for (Object aSet : set) {
-                        Map.Entry m = (Map.Entry) aSet;
-                        ((View) m.getValue()).setForeground(new ColorDrawable(ContextCompat.getColor(NoteListActivity.this, android.R.color.transparent)));
-                        Note note = (Note) m.getKey();
-                        int index = notesList.indexOf(note);
-                        db.deleteNote(note);
+                    new AlertDialog.Builder(NoteListActivity.this)
+                            .setTitle("Delete")
+                            .setMessage("Delete selected item(s)")
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                    delete();
+                                    actionMode.finish();
+                                }
+                            })
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            })
+                            .show();
 
-                        notesList.remove(index);
-                        mAdapter.notifyItemRemoved(index);
 
-                        toggleEmptyNotes();
-
-                    }
-                    selectedIds.clear();
-                    actionMode.finish();
                     return true;
             }
             return false;
